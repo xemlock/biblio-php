@@ -85,7 +85,7 @@ class BiblioPHP_Ris_Parser
     /**
      * @return string|false
      */
-    protected function _getNonEmptyLine()
+    protected function _getNonEmptyLine($prefix = null)
     {
         while (($line = $this->_getLine()) !== false) {
             if (strlen($line) && !ctype_space($line)) {
@@ -96,17 +96,45 @@ class BiblioPHP_Ris_Parser
         return false;
     }
 
+    protected $_field;
+
     /**
      * @return array|false
      */
     protected function _parseEntry()
     {
-        $entry = array('TY' => 'GEN');
+        // move to the begining of record, this allows to skip UTF-8 BOM
+        while (($line = $this->_getLine()) !== false) {
+            if (($pos = strpos($line, 'TY  - ')) !== false) {
+                $line = substr($line, $pos);
+                break;
+            }
+        }
+
+        if ($line === false) {
+            return false;
+        }
+
+        $this->_field = null;
+
+        $entry = array(
+            'TY' => trim(substr($line, 6)),
+        );
 
         while (($line = $this->_getNonEmptyLine()) !== false) {
+            $line = ltrim($line); // do not rtrim, as it invalidates ER field
+
             if (!preg_match('/^(?P<key>[A-Z][A-Z0-9])  - /i', $line, $match)) {
-                $this->_debug("Invalid line '%s'\n", $line);
-                continue;
+                // if non-empty line and of invalid syntax, assume (broken)
+                // multi-line syntax used by EndNote;
+                // Duplicate last encountered field
+                if (strlen($line) && $this->_field) {
+                    $match['key'] = $this->_field;
+                    $line = $this->_field . '  - ' . $line;
+                } else {
+                    $this->_debug("Invalid line '%s'\n", $line);
+                    continue;
+                }
             }
             $key = strtoupper($match['key']);
 
@@ -115,12 +143,13 @@ class BiblioPHP_Ris_Parser
                 break;
             }
 
+            $this->_field = $key;
             $value = trim(substr($line, 6));
 
             if ($key === 'TY') {
                 // record type must always be a string, and never expanded
                 // to an array of types
-                $this->_debug("Start of record\n");
+                $this->_debug("Record type declaration\n");
                 $entry['TY'] = $value;
                 continue;
             }
