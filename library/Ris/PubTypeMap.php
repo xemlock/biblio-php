@@ -11,70 +11,70 @@ class BiblioPHP_Ris_PubTypeMap
             case 'EJOUR':  // Electronic Journal Article
             case 'MGZN':   // Magazine Article
             case 'NEWS':   // Newspaper Article
-                return PublicationType::ARTICLE;
+                return BiblioPHP_PublicationType::ARTICLE;
 
             case 'BOOK':   // Book
             case 'EBOOK':  // Electronic Book
             case 'EDBOOK': // Edited Book
-                return PublicationType::BOOK;
+                return BiblioPHP_PublicationType::BOOK;
 
             case 'PAMP':   // Pamphlet
-                return PublicationType::BOOKLET;
+                return BiblioPHP_PublicationType::BOOKLET;
 
             case 'CHAP':   // Book Section
             case 'ECHAP':  // Electronic Book Section
-                return PublicationType::CHAPTER;
+                return BiblioPHP_PublicationType::CHAPTER;
 
             case 'CONF':   // Conference Proceeding
-                return PublicationType::PROCEEDINGS;
+                return BiblioPHP_PublicationType::PROCEEDINGS;
 
             case 'CPAPER': // Conference Paper
-                return PublicationType::CONF_PAPER;
+                return BiblioPHP_PublicationType::CONF_PAPER;
 
             case 'THES':   // Thesis
                 // assume PhD thesis by default
-                return PublicationType::PHD_THESIS;
+                return BiblioPHP_PublicationType::PHD_THESIS;
 
             case 'RPRT':   // Report
-                return PublicationType::REPORT;
+                return BiblioPHP_PublicationType::REPORT;
 
             case 'UNPB':   // Unpublished Work
-                return PublicationType::UNPUBLISHED;
+                return BiblioPHP_PublicationType::UNPUBLISHED;
 
             default:       // Generic
-                return PublicationType::GENERIC;
+                return BiblioPHP_PublicationType::GENERIC;
         }
     }
 
     public static function fromPubType($pubType)
     {
         switch ($pubType) {
-            case PublicationType::ARTICLE:
+            case BiblioPHP_PublicationType::ARTICLE:
                 return 'JOUR';
 
-            case PublicationType::BOOK:
+            case BiblioPHP_PublicationType::BOOK:
                 return 'BOOK';
 
-            case PublicationType::BOOKLET:
+            case BiblioPHP_PublicationType::BOOKLET:
                 return 'PAMP';
 
-            case PublicationType::CHAPTER:
+            case BiblioPHP_PublicationType::CHAPTER:
                 return 'CHAP';
 
-            case PublicationType::CONF_PAPER:
+            case BiblioPHP_PublicationType::CONF_PAPER:
                 return 'CPAPER';
 
-            case PublicationType::MASTER_THESIS:
-            case PublicationType::PHD_THESIS:
+            case BiblioPHP_PublicationType::MASTER_THESIS:
+            case BiblioPHP_PublicationType::PHD_THESIS:
                 return 'THESIS';
 
-            case PublicationType::PROCEEDINGS:
+            case BiblioPHP_PublicationType::PROCEEDINGS:
                 return 'CONF';
 
-            case PublicationType::REPORT:
+            case BiblioPHP_PublicationType::REPORT:
                 return 'RPRT';
 
-            case PublicationType::UNPUBLISHED:
+            case BiblioPHP_PublicationType::UNPUBLISHED:
                 return 'UNPB';
 
             default:
