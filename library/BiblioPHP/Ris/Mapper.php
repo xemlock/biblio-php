@@ -80,10 +80,10 @@ class BiblioPHP_Ris_Mapper
         foreach (array('N1', 'L3', 'M3') as $field) {
             if (empty($doi) && isset($data[$field])) {
                 $tmp = trim($data[$field]);
-                if (strncasecmp('doi:', $tmp, 4)) {
+                if (strncasecmp('doi:', $tmp, 4) === 0) {
                     // strip off doi: prefix
                     $doi = ltrim(substr($tmp, 4));
-                } elseif (strncmp('10.', $tmp, 3)) {
+                } elseif (strncmp('10.', $tmp, 3) === 0) {
                     $doi = $tmp;
                 }
             }
