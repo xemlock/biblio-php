@@ -63,7 +63,10 @@ class BiblioPHP_Publication
 
     public function addKeyword($keyword)
     {
-        $this->_keywords[] = trim($keyword);
+        $keyword = trim($keyword);
+        if (strlen($keyword)) {
+            $this->_keywords[] = $keyword;
+        }
         return $this;
     }
 

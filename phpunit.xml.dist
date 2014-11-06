@@ -13,10 +13,10 @@
 >
     <testsuites>
         <testsuite name="Ris">
-            <directory suffix=".php">tests/Ris</directory>
+            <directory suffix=".php">tests/BiblioPHP/Ris</directory>
         </testsuite>
         <testsuite name="Bibtex">
-            <directory suffix=".php">tests/Bibtex</directory>
+            <directory suffix=".php">tests/BiblioPHP/Bibtex</directory>
         </testsuite>
     </testsuites>
 </phpunit>

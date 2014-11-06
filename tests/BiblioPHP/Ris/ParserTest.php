@@ -1,13 +1,13 @@
 <?php
 
-require_once 'Ris/Parser.php';
+require_once 'BiblioPHP/Ris/Parser.php';
 
 class BiblioPHP_Ris_ParserTest extends PHPUnit_Framework_TestCase
 {
     public function testParseFromFile()
     {
         $parser = new BiblioPHP_Ris_Parser();
-        $entries = $parser->parseFile(dirname(__FILE__) . '/../assets/ams.ris');
+        $entries = $parser->parseFile(dirname(__FILE__) . '/../../assets/ams.ris');
     }
 
     public function testParse()

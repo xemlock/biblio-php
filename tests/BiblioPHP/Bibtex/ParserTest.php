@@ -1,7 +1,7 @@
 <?php
 
-require_once 'Bibtex/Tokenizer.php';
-require_once 'Bibtex/Parser.php';
+require_once 'BiblioPHP/Bibtex/Tokenizer.php';
+require_once 'BiblioPHP/Bibtex/Parser.php';
 
 class BiblioPHP_Bib_ParserTest extends PHPUnit_Framework_TestCase
 {
