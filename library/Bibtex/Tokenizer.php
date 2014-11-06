@@ -6,6 +6,7 @@
 class BiblioPHP_Bibtex_Tokenizer
 {
     const S_DEFAULT         = 'DEFAULT';
+    const S_COMMENT         = 'COMMENT';
     const S_TYPE            = 'TYPE';
     const S_EXPECT_STRING   = 'EXPECT_STRING';
     const S_STRING          = 'STRING';
@@ -19,20 +20,46 @@ class BiblioPHP_Bibtex_Tokenizer
     const T_SEPARATOR       = 'T_SEPARATOR';
     const T_END             = 'T_END';
 
+    /**
+     * Input stream
+     * @var resource
+     */
     protected $_stream;
 
+    /**
+     * Buffer for lines read from input stream
+     * @var string
+     */
     protected $_streamBuf;
 
+    /**
+     * Current read position in the stream buffer
+     * @var int
+     */
     protected $_streamBufOffset;
 
+    /**
+     * Buffer for returned characters
+     * @var string
+     */
     protected $_ungetBuf;
 
+    /**
+     * Tokenizer state, one of S_ constants
+     * @var string
+     */
     protected $_state;
 
+    /**
+     * Line counter
+     * @var int
+     */
     protected $_line;
 
-    protected $_tokenBuf;
-
+    /**
+     * Current token value
+     * @array
+     */
     protected $_token;
 
     public function setString($string)
@@ -60,8 +87,11 @@ class BiblioPHP_Bibtex_Tokenizer
         $this->_streamBufOffset = 0;
 
         $this->_line = 1;
-        $this->_tokenBuf = '';
-        $this->_token = null;
+        $this->_token = array(
+            'type'  => null,
+            'value' => null,
+            'line'  => null,
+        );
         $this->_state = self::S_DEFAULT;
 
         return $this;
@@ -112,9 +142,16 @@ class BiblioPHP_Bibtex_Tokenizer
 
     protected function _setToken($type, $value = '')
     {
-        $this->_tokenBuf = '';
-        $line = $this->_line;
-        return $this->_token = compact('type', 'value', 'line');
+        $this->_token['type']  = $type;
+        $this->_token['value'] = $value;
+        $this->_token['line']  = $this->_line;
+        return $this->_token;
+    }
+
+    protected function _appendToken($value)
+    {
+        $this->_token['value'] .= $value;
+        return $this->_token;
     }
 
     public function getToken()
@@ -130,37 +167,45 @@ class BiblioPHP_Bibtex_Tokenizer
                     switch ($this->_state) {
                         case self::S_DEFAULT:
                             $this->_setState(self::S_TYPE);
-                            $this->_tokenBuf = '@';
+                            $this->_setToken(self::T_TYPE, '@');
                             break;
 
                         case self::S_QUOTED_STRING:
                         case self::S_BRACED_STRING:
-                            $this->_tokenBuf .= '@';
+                            $this->_appendToken('@');
                             break;
+
+                        default:
+                            // all characters outside entries are ignored
                     }
                     break;
 
                 case '{':
                     switch ($this->_state) {
                         case self::S_TYPE:
-                            switch (strtolower($this->_tokenBuf)) {
-                                case 'comment':
-                                    $this->_setState(self::S_DEFAULT);
+                            switch (strtolower($this->_token['value'])) {
+                                case '@comment':
+                                    // If the entry type is @comment, it is not considered to be the start
+                                    // of an entry. Actual rule is that everything from the @comment and to
+                                    // the end of line is ignored. Read more:
+                                    // http://maverick.inria.fr/~Xavier.Decoret/resources/xdkbibtex/bibtex_summary.html#comment
+                                    $this->_setState(self::S_COMMENT);
                                     break;
 
                                 default:
                                     $this->_setState(self::S_EXPECT_STRING);
-                                    return $this->_setToken(self::T_TYPE, $this->_tokenBuf);
+                                    return $this->_token;
                             }
                             break;
 
                         case self::S_EXPECT_STRING:
                             $this->_setState(self::S_BRACED_STRING);
+                            $this->_setToken(self::T_STRING);
                             $nestLevel = 0;
                             break;
 
                         case self::S_BRACED_STRING:
-                            $this->_tokenBuf .= '{';
+                            $this->_appendToken('{');
                             ++$nestLevel;
                             break;
                     }
@@ -174,16 +219,16 @@ class BiblioPHP_Bibtex_Tokenizer
 
                         case self::S_BRACED_STRING:
                             if ($nestLevel) {
-                                $this->_tokenBuf .= '}';
+                                $this->_appendToken('}');
                                 --$nestLevel;
                             } else {
                                 $this->_setState(self::S_EXPECT_STRING);
-                                return $this->_setToken(self::T_STRING, $this->_tokenBuf);
+                                return $this->_token;
                             }
                             break;
 
                         case self::S_QUOTED_STRING:
-                            $this->_tokenBuf .= '}';
+                            $this->_appendToken('}');
                             break;
 
                         default:
@@ -196,14 +241,14 @@ class BiblioPHP_Bibtex_Tokenizer
                         case self::S_STRING:
                             $this->_setState(self::S_EXPECT_STRING);
                             $this->_ungetChar(',');
-                            return $this->_setToken(self::T_STRING, $this->_tokenBuf);
+                            return $this->_token;
 
                         case self::S_EXPECT_STRING:
                             return $this->_setToken(self::T_COMMA, ',');
 
                         case self::S_QUOTED_STRING:
                         case self::S_BRACED_STRING:
-                            $this->_tokenBuf .= ',';
+                            $this->_appendToken(',');
                             break;
                     }
                     break;
@@ -215,7 +260,7 @@ class BiblioPHP_Bibtex_Tokenizer
 
                         case self::S_QUOTED_STRING:
                         case self::S_BRACED_STRING:
-                            $this->_tokenBuf .= '#';
+                            $this->_appendToken('#');
                             break;
 
                         default:
@@ -225,6 +270,11 @@ class BiblioPHP_Bibtex_Tokenizer
 
                 case "\n":
                     ++$this->_line;
+                    switch ($this->_state) {
+                        case self::S_COMMENT:
+                            $this->_state = self::S_DEFAULT;
+                            break;
+                    }
                     // falls through
 
                 case " ":
@@ -233,11 +283,11 @@ class BiblioPHP_Bibtex_Tokenizer
                     switch ($this->_state) {
                         case self::S_STRING:
                             $this->_setState(self::S_EXPECT_STRING);
-                            return $this->_setToken(self::T_STRING, $this->_tokenBuf);
+                            return $this->_token;
 
                         case self::S_QUOTED_STRING:
                         case self::S_BRACED_STRING:
-                            $this->_tokenBuf .= $char;
+                            $this->_appendToken($char);
                             break;
 
                         default:
@@ -253,13 +303,13 @@ class BiblioPHP_Bibtex_Tokenizer
 
                         case self::S_QUOTED_STRING:
                         case self::S_BRACED_STRING:
-                            $this->_tokenBuf .= $char;
+                            $this->_appendToken($char);
                             break;
 
                         case self::S_STRING:
                             $this->_setState(self::S_EXPECT_STRING);
                             $this->_ungetChar('=');
-                            return $this->_setToken(self::T_STRING, $this->_tokenBuf);
+                            return $this->_token;
 
                         default:
                             // skip
@@ -271,11 +321,12 @@ class BiblioPHP_Bibtex_Tokenizer
                     switch ($this->_state) {
                         case self::S_EXPECT_STRING:
                             $this->_setState(self::S_QUOTED_STRING);
+                            $this->_setToken(self::T_STRING);
                             break;
 
                         case self::S_QUOTED_STRING:
                             $this->_setState(self::S_EXPECT_STRING);
-                            return $this->_setToken(self::T_STRING, $this->_tokenBuf);
+                            return $this->_token;
                     }
                     break;
 
@@ -283,21 +334,25 @@ class BiblioPHP_Bibtex_Tokenizer
                     switch ($this->_state) {
                         case self::S_TYPE:
                             if (ctype_alpha($char)) {
-                                $this->_tokenBuf .= $char;
+                                $this->_appendToken($char);
                             }
                             break;
 
                         case self::S_EXPECT_STRING:
                         case self::S_STRING:
                             if (ctype_alnum($char) || (strpos('-:._', $char) !== false)) {
-                                $this->_tokenBuf .= $char;
+                                if ($this->_state === self::S_EXPECT_STRING) {
+                                    $this->_setToken(self::T_STRING, $char);
+                                } else {
+                                    $this->_appendToken($char);
+                                }
                                 $this->_setState(self::S_STRING);
                             }
                             break;
 
                         case self::S_QUOTED_STRING:
                         case self::S_BRACED_STRING:
-                            $this->_tokenBuf .= $char;
+                            $this->_appendToken($char);
                             break;
                     }
                     break;
