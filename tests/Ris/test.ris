@@ -1,0 +1,174 @@
+
+
+
+TY  - JOUR
+T1  - Large-Eddy Simulations of Trade Wind Cumuli Using Particle-Based Microphysics with Monte Carlo Coalescence
+AU  - Arabas, Sylwester
+AU  - Shima, Shin-ichiro
+Y1  - 2013/06/07
+PY  - 2013
+DA  - 2013/09/01
+N1  - doi: 10.1175/JAS-D-12-0295.1
+DO  - 10.1175/JAS-D-12-0295.1
+T2  - Journal of the Atmospheric Sciences
+JF  - Journal of the Atmospheric Sciences
+JO  - J. Atmos. Sci.
+SP  - 2768
+EP  - 2777
+VL  - 70
+IS  - 9
+PB  - American Meteorological Society
+N2  - AbstractA series of simulations employing the superdroplet method (SDM) for representing aerosol, cloud, and rain microphysics in large-eddy simulations (LES) is discussed. The particle-based formulation treats all particles in the same way, subjecting them to condensational growth and evaporation, transport of the particles by the flow, gravitational settling, and collisional growth. SDM features a Monte Carlo?type numerical scheme for representing the collision and coalescence process. All processes combined cover representation of cloud condensation nuclei (CCN) activation, drizzle formation by autoconversion, accretion of cloud droplets, self-collection of raindrops, and precipitation, including aerosol wet deposition. The model setup used in the study is based on observations from the Rain in Cumulus over the Ocean (RICO) field project. Cloud and rain droplet size spectra obtained in the simulations are discussed in context of previously published analyses of aircraft observations carried out during RICO. The analysis covers height-resolved statistics of simulated cloud microphysical parameters such as droplet number concentration, effective radius, and parameters describing the width of the cloud droplet size spectrum. A reasonable agreement with measurements is found for several of the discussed parameters. The sensitivity of the results to the grid resolution of the LES, as well as to the sampling density of the probabilistic Monte Carlo?type model, is explored.
+AB  - AbstractA series of simulations employing the superdroplet method (SDM) for representing aerosol, cloud, and rain microphysics in large-eddy simulations (LES) is discussed. The particle-based formulation treats all particles in the same way, subjecting them to condensational growth and evaporation, transport of the particles by the flow, gravitational settling, and collisional growth. SDM features a Monte Carlo?type numerical scheme for representing the collision and coalescence process. All processes combined cover representation of cloud condensation nuclei (CCN) activation, drizzle formation by autoconversion, accretion of cloud droplets, self-collection of raindrops, and precipitation, including aerosol wet deposition. The model setup used in the study is based on observations from the Rain in Cumulus over the Ocean (RICO) field project. Cloud and rain droplet size spectra obtained in the simulations are discussed in context of previously published analyses of aircraft observations carried out during RICO. The analysis covers height-resolved statistics of simulated cloud microphysical parameters such as droplet number concentration, effective radius, and parameters describing the width of the cloud droplet size spectrum. A reasonable agreement with measurements is found for several of the discussed parameters. The sensitivity of the results to the grid resolution of the LES, as well as to the sampling density of the probabilistic Monte Carlo?type model, is explored.
+SN  - 0022-4928
+M3  - doi: 10.1175/JAS-D-12-0295.1
+UR  - http://dx.doi.org/10.1175/JAS-D-12-0295.1
+Y2  - 2014/11/04
+ER  - 
+
+
+
+
+TY  - JOUR
+T1  - Supersaturation and Diffusional Droplet Growth in Liquid Clouds
+AU  - Pinsky, M.
+AU  - Mazin, I. P.
+AU  - Korolev, A.
+AU  - Khain, A.
+Y1  - 2012/11/09
+PY  - 2012
+DA  - 2013/09/01
+N1  - doi: 10.1175/JAS-D-12-077.1
+DO  - 10.1175/JAS-D-12-077.1
+T2  - Journal of the Atmospheric Sciences
+JF  - Journal of the Atmospheric Sciences
+JO  - J. Atmos. Sci.
+SP  - 2778
+EP  - 2793
+VL  - 70
+IS  - 9
+PB  - American Meteorological Society
+N2  - AbstractThe process of collective diffusional growth of droplets in an adiabatic parcel ascending or descending with the constant vertical velocity is analyzed in the frame of the regular condensation approach. Closed equations for the evolution of liquid water content, droplet radius, and supersaturation are derived from the mass balance equation centered with respect to the adiabatic water content. The analytical expression for the maximum supersaturation formed near the cloud base is obtained here. Similar analytical expressions for the height and liquid water mixing ratio corresponding to the level where occurs have also been obtained. It is shown that all three variables , , and are linearly related to each other and all are proportional to , where w is the vertical velocity and N is the droplet number concentration. Universal solutions for supersaturation and liquid water mixing ratio are found here, which incorporates the dependence on vertical velocity, droplet concentration, temperature, and pressure into one dimensionless parameter. The actual solutions for and can be obtained from the universal solutions with the help of appropriate scaling factors described in this study. The results obtained in the frame of this study provide a new look at the nature of supersaturation formation in liquid clouds. Despite the fact that the study does not include a detailed treatment of the activation process, it is shown that this work can be useful for the parameterization of cloud microphysical processes in cloud models, especially for the parameterization of cloud condensation nuclei (CCN) activation.
+AB  - AbstractThe process of collective diffusional growth of droplets in an adiabatic parcel ascending or descending with the constant vertical velocity is analyzed in the frame of the regular condensation approach. Closed equations for the evolution of liquid water content, droplet radius, and supersaturation are derived from the mass balance equation centered with respect to the adiabatic water content. The analytical expression for the maximum supersaturation formed near the cloud base is obtained here. Similar analytical expressions for the height and liquid water mixing ratio corresponding to the level where occurs have also been obtained. It is shown that all three variables , , and are linearly related to each other and all are proportional to , where w is the vertical velocity and N is the droplet number concentration. Universal solutions for supersaturation and liquid water mixing ratio are found here, which incorporates the dependence on vertical velocity, droplet concentration, temperature, and pressure into one dimensionless parameter. The actual solutions for and can be obtained from the universal solutions with the help of appropriate scaling factors described in this study. The results obtained in the frame of this study provide a new look at the nature of supersaturation formation in liquid clouds. Despite the fact that the study does not include a detailed treatment of the activation process, it is shown that this work can be useful for the parameterization of cloud microphysical processes in cloud models, especially for the parameterization of cloud condensation nuclei (CCN) activation.
+SN  - 0022-4928
+M3  - doi: 10.1175/JAS-D-12-077.1
+UR  - http://dx.doi.org/10.1175/JAS-D-12-077.1
+Y2  - 2014/11/04
+ER  - 
+
+
+
+
+TY  - JOUR
+T1  - Influence of Ice Particle Surface Roughening on the Global Cloud Radiative Effect
+AU  - Yi, Bingqi
+AU  - Yang, Ping
+AU  - Baum, Bryan A.
+AU  - L'Ecuyer, Tristan
+AU  - Oreopoulos, Lazaros
+AU  - Mlawer, Eli J.
+AU  - Heymsfield, Andrew J.
+AU  - Liou, Kuo-Nan
+Y1  - 2013/05/28
+PY  - 2013
+DA  - 2013/09/01
+N1  - doi: 10.1175/JAS-D-13-020.1
+DO  - 10.1175/JAS-D-13-020.1
+T2  - Journal of the Atmospheric Sciences
+JF  - Journal of the Atmospheric Sciences
+JO  - J. Atmos. Sci.
+SP  - 2794
+EP  - 2807
+VL  - 70
+IS  - 9
+PB  - American Meteorological Society
+N2  - AbstractIce clouds influence the climate system by changing the radiation budget and large-scale circulation. Therefore, climate models need to have an accurate representation of ice clouds and their radiative effects. In this paper, new broadband parameterizations for ice cloud bulk scattering properties are developed for severely roughened ice particles. The parameterizations are based on a general habit mixture that includes nine habits (droxtals, hollow/solid columns, plates, solid/hollow bullet rosettes, aggregate of solid columns, and small/large aggregates of plates). The scattering properties for these individual habits incorporate recent advances in light-scattering computations. The influence of ice particle surface roughness on the ice cloud radiative effect is determined through simulations with the Fu?Liou and the GCM version of the Rapid Radiative Transfer Model (RRTMG) codes and the National Center for Atmospheric Research Community Atmosphere Model (CAM, version 5.1). The differences in shortwave (SW) and longwave (LW) radiative effect at both the top of the atmosphere and the surface are determined for smooth and severely roughened ice particles. While the influence of particle roughening on the single-scattering properties is negligible in the LW, the results indicate that ice crystal roughness can change the SW forcing locally by more than 10 W m?2 over a range of effective diameters. The global-averaged SW cloud radiative effect due to ice particle surface roughness is estimated to be roughly 1?2 W m?2. The CAM results indicate that ice particle roughening can result in a large regional SW radiative effect and a small but nonnegligible increase in the global LW cloud radiative effect.
+AB  - AbstractIce clouds influence the climate system by changing the radiation budget and large-scale circulation. Therefore, climate models need to have an accurate representation of ice clouds and their radiative effects. In this paper, new broadband parameterizations for ice cloud bulk scattering properties are developed for severely roughened ice particles. The parameterizations are based on a general habit mixture that includes nine habits (droxtals, hollow/solid columns, plates, solid/hollow bullet rosettes, aggregate of solid columns, and small/large aggregates of plates). The scattering properties for these individual habits incorporate recent advances in light-scattering computations. The influence of ice particle surface roughness on the ice cloud radiative effect is determined through simulations with the Fu?Liou and the GCM version of the Rapid Radiative Transfer Model (RRTMG) codes and the National Center for Atmospheric Research Community Atmosphere Model (CAM, version 5.1). The differences in shortwave (SW) and longwave (LW) radiative effect at both the top of the atmosphere and the surface are determined for smooth and severely roughened ice particles. While the influence of particle roughening on the single-scattering properties is negligible in the LW, the results indicate that ice crystal roughness can change the SW forcing locally by more than 10 W m?2 over a range of effective diameters. The global-averaged SW cloud radiative effect due to ice particle surface roughness is estimated to be roughly 1?2 W m?2. The CAM results indicate that ice particle roughening can result in a large regional SW radiative effect and a small but nonnegligible increase in the global LW cloud radiative effect.
+SN  - 0022-4928
+M3  - doi: 10.1175/JAS-D-13-020.1
+UR  - http://dx.doi.org/10.1175/JAS-D-13-020.1
+Y2  - 2014/11/04
+ER  - 
+
+
+TY  - JOUR
+AU  - Lawrence, Michael S.
+AU  - Stojanov, Petar
+AU  - Polak, Paz
+AU  - Kryukov, Gregory V.
+AU  - Cibulskis, Kristian
+AU  - Sivachenko, Andrey
+AU  - Carter, Scott L.
+AU  - Stewart, Chip
+AU  - Mermel, Craig H.
+AU  - Roberts, Steven A.
+AU  - Kiezun, Adam
+AU  - Hammerman, Peter S.
+AU  - McKenna, Aaron
+AU  - Drier, Yotam
+AU  - Zou, Lihua
+AU  - Ramos, Alex H.
+AU  - Pugh, Trevor J.
+AU  - Stransky, Nicolas
+AU  - Helman, Elena
+AU  - Kim, Jaegil
+AU  - Sougnez, Carrie
+AU  - Ambrogio, Lauren
+AU  - Nickerson, Elizabeth
+AU  - Shefler, Erica
+AU  - Cortes, Maria L.
+AU  - Auclair, Daniel
+AU  - Saksena, Gordon
+AU  - Voet, Douglas
+AU  - Noble, Michael
+AU  - DiCara, Daniel
+AU  - Lin, Pei
+AU  - Lichtenstein, Lee
+AU  - Heiman, David I.
+AU  - Fennell, Timothy
+AU  - Imielinski, Marcin
+AU  - Hernandez, Bryan
+AU  - Hodis, Eran
+AU  - Baca, Sylvan
+AU  - Dulak, Austin M.
+AU  - Lohr, Jens
+AU  - Landau, Dan-Avi
+AU  - Wu, Catherine J.
+AU  - Melendez-Zajgla, Jorge
+AU  - Hidalgo-Miranda, Alfredo
+AU  - Koren, Amnon
+AU  - McCarroll, Steven A.
+AU  - Mora, Jaume
+AU  - Lee, Ryan S.
+AU  - Crompton, Brian
+AU  - Onofrio, Robert
+AU  - Parkin, Melissa
+AU  - Winckler, Wendy
+AU  - Ardlie, Kristin
+AU  - Gabriel, Stacey B.
+AU  - Roberts, Charles W. M.
+AU  - Biegel, Jaclyn A.
+AU  - Stegmaier, Kimberly
+AU  - Bass, Adam J.
+AU  - Garraway, Levi A.
+AU  - Meyerson, Matthew
+AU  - Golub, Todd R.
+AU  - Gordenin, Dmitry A.
+AU  - Sunyaev, Shamil
+AU  - Lander, Eric S.
+AU  - Getz, Gad
+TI  - Mutational heterogeneity in cancer and the search for new cancer-associated genes
+JA  - Nature
+PY  - 2013/07/11/print
+VL  - 499
+IS  - 7457
+SP  - 214
+EP  - 218
+PB  - Nature Publishing Group, a division of Macmillan Publishers Limited. All Rights Reserved.
+SN  - 0028-0836
+UR  - http://dx.doi.org/10.1038/nature12213
+L3  - 10.1038/nature12213
+M3  - Letter
+L3  - http://www.nature.com/nature/journal/v499/n7457/abs/nature12213.html#supplementary-information
+ER  - 
+
