@@ -1,0 +1,23 @@
+﻿TY  - JOUR
+AB  - AbstractA series of simulations employing the superdroplet method (SDM) for representing aerosol, cloud, and rain microphysics in large-eddy simulations (LES) is discussed. The particle-based formulation treats all particles in the same way, subjecting them to condensational growth and evaporation, transport of the particles by the flow, gravitational settling, and collisional growth. SDM features a Monte Carlo?type numerical scheme for representing the collision and coalescence process. All processes combined cover representation of cloud condensation nuclei (CCN) activation, drizzle formation by autoconversion, accretion of cloud droplets, self-collection of raindrops, and precipitation, including aerosol wet deposition. The model setup used in the study is based on observations from the Rain in Cumulus over the Ocean (RICO) field project. Cloud and rain droplet size spectra obtained in the simulations are discussed in context of previously published analyses of aircraft observations carried out during RICO. The analysis covers height-resolved statistics of simulated cloud microphysical parameters such as droplet number concentration, effective radius, and parameters describing the width of the cloud droplet size spectrum. A reasonable agreement with measurements is found for several of the discussed parameters. The sensitivity of the results to the grid resolution of the LES, as well as to the sampling density of the probabilistic Monte Carlo?type model, is explored.
+AU  - Arabas, Sylwester
+AU  - Shima, Shin-ichiro
+DA  - 2013/09/01
+DO  - 10.1175/JAS-D-12-0295.1
+KW  - Keyword1
+Keyword2
+Keyword3 with more than one word
+M1  - 9
+PY  - 2013
+SN  - 0022-4928
+SP  - 2768-2777
+ST  - Large-Eddy Simulations of Trade Wind Cumuli Using Particle-Based Microphysics with Monte Carlo Coalescence
+T2  - Journal of the Atmospheric Sciences
+TI  - Large-Eddy Simulations of Trade Wind Cumuli Using Particle-Based Microphysics with Monte Carlo Coalescence
+UR  - http://dx.doi.org/10.1175/JAS-D-12-0295.1
+VL  - 70
+Y2  - 2014/11/05
+ID  - 1
+ER  - 
+
+

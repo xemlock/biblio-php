@@ -9,3 +9,7 @@ set_include_path(
     . PATH_SEPARATOR
     . get_include_path()
 );
+
+function test_asset($filename) {
+    return dirname(__FILE__) . '/assets/' . $filename;
+}

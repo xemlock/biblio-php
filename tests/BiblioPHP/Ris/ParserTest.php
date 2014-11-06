@@ -7,7 +7,7 @@ class BiblioPHP_Ris_ParserTest extends PHPUnit_Framework_TestCase
     public function testParseFromFile()
     {
         $parser = new BiblioPHP_Ris_Parser();
-        $entries = $parser->parseFile(dirname(__FILE__) . '/../../assets/ams.ris');
+        $entries = $parser->parseFile(test_asset('ams.ris'));
     }
 
     public function testParse()
@@ -32,9 +32,9 @@ EOS;
         $parser = new BiblioPHP_Ris_Parser();
         $entries = $parser->parse($string);
 
-        $this->assertTrue($entries[0]['TY'] === 'JOUR');
-        $this->assertTrue($entries[0]['SP'] === '1128');
-        $this->assertTrue($entries[0]['UR'] === 'http://dx.doi.org/10.1038/nm.2447');
+        $this->assertEquals($entries[0]['TY'], 'JOUR');
+        $this->assertEquals($entries[0]['SP'], '1128');
+        $this->assertEquals($entries[0]['UR'], 'http://dx.doi.org/10.1038/nm.2447');
 
     }
 
@@ -43,7 +43,7 @@ EOS;
         $parser = new BiblioPHP_Ris_Parser();
         $entries = $parser->parse('This is an invalid input');
 
-        $this->assertTrue($entries === array());
+        $this->assertEquals($entries, array());
     }
 
     /**
@@ -62,5 +62,18 @@ EOS;
     {
         $parser = new BiblioPHP_Ris_Parser();
         $parser->parseFile('?');
+    }
+
+    public function testEndNoteFile()
+    {
+        $parser = new BiblioPHP_Ris_Parser();
+        $entries = $parser->parseFile(test_asset('ams.endnote.ris'));
+
+        $this->assertEquals($entries[0]['TY'], 'JOUR');
+        $this->assertEquals($entries[0]['KW'], array(
+            'Keyword1',
+            'Keyword2',
+            'Keyword3 with more than one word',
+        ));
     }
 }
