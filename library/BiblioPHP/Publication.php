@@ -34,6 +34,10 @@ class BiblioPHP_Publication
 
     protected $_year;
 
+    protected $_month;
+
+    protected $_day;
+
     protected $_place;
 
     protected $_language;
@@ -58,8 +62,6 @@ class BiblioPHP_Publication
     protected $_keywords;
 
     protected $_notes;
-
-    protected $_date;
 
     public function addKeyword($keyword)
     {
@@ -205,6 +207,9 @@ class BiblioPHP_Publication
         return $this;
     }
 
+    /**
+     * @reutrn array
+     */
     public function getPages()
     {
         $pages = array();
@@ -218,13 +223,20 @@ class BiblioPHP_Publication
         return $pages;
     }
 
+    /**
+     * @return int|false
+     */
     public function getLastPage()
     {
         if ($this->_pages) {
             return end($this->_pages);
         }
+        return false;
     }
 
+    /**
+     * @return int|false
+     */
     public function getFirstPage()
     {
         if ($this->_pages) {
@@ -232,6 +244,7 @@ class BiblioPHP_Publication
                 return $start;
             }
         }
+        return false;
     }
 
     /**
@@ -244,7 +257,10 @@ class BiblioPHP_Publication
         // Lastname, Firstname, Suffix
         // Lastname is the only required part.
 
+        // make sure name does not contain colon
+
         $string = trim($string, ", \r\n\t");
+        $string = str_replace(';', '', $string);
 
         $parts = preg_split('/\s*,\s*/', $string);
         $parts = array_slice($parts, 0, 3);

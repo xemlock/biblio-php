@@ -103,10 +103,17 @@ class BiblioPHP_Ris_Mapper
             }
         }
 
+        // do not look for URL in L1-L4 fields, as the spec says they are
+        // for local file attachments only
+        $url = null;
         if (isset($data['UR'])) {
-            $publication->setUrl($data['UR']);
+            $tmp = trim($data['UR']);
+            if (preg_match('/(ht|f)tp(s)?:\/\//i', $tmp)) {
+                $url = $tmp;
+            }
         }
-        // TODO look for URL in L1, L2, L3, L4
+        $publication->setUrl($url);
+
 
         if (isset($data['SN'])) {
             $publication->setSerialNumber($data['SN']);
@@ -132,50 +139,57 @@ class BiblioPHP_Ris_Mapper
             $publication->setLanguage($data['LA']);
         }
 
-        if (isset($data['AB'])) {
-            $abstract = trim($data['AB']);
-            // AMS adds Abstract in front of abstract
-            if (strncasecmp($abstract, 'Abstract', 8) === 0) {
-                $abstract = substr($abstract, 8);
+        // look for abstract in AB and N2
+        $abstract = null;
+        foreach (array('AB', 'N2') as $field) {
+            if (empty($abstract) && isset($data[$field])) {
+                $tmp = trim($data[$field]);
+
+                // AMS adds Abstract at the beginning of abstract
+                if (strncasecmp($tmp, 'Abstract', 8) === 0) {
+                    $tmp = substr($tmp, 8);
+                }
+
+                if (strlen($tmp)) {
+                    $abstract = $tmp;
+                }
             }
-            $publication->setAbstract($abstract);
         }
+        $publication->setAbstract($abstract);
 
-        // dates
-        if (isset($data['PY'])) {
-            $publication->setYear(intval($data['PY']));
-        }
+        // read dates, PY is expected to be four digits only, however a whole
+        // date may be stored there. First check PY, then DA fields
 
-        // dates are expected to be in format YYYY/MM/DD
-        if (isset($data['DA'])) {
-            $date = null;
-            $parts = array_map(
-                'intval',
-                array_slice(explode('/', $data['DA']), 0, 3)
-            );
-            switch (count($parts)) {
-                case 3:
-                    list($y, $m, $d) = $parts;
-                    if (checkdate($m, $d, $y)) {
-                        $date = sprintf('%04d-%02d-%02d', $y, $m, $d);
-                    }
-                    break;
+        // EndNote (tested in X7) has broken support for DA. It does strange
+        // things when date is not given in YYYY/MM/DD format. Don't care.
 
-                case 2:
-                    list($y, $m) = $parts;
-                    if (1 <= $m && $m <= 12) {
-                        $date = sprintf('%04d-%02d', $y, $m);
-                    }
-                    break;
+        // always check strlen when performing ctype_digit checks; before
+        // PHP 5.1.0 those functions returned TRUE when text was an empty string
 
-                case 1:
-                    list($y) = $parts;
-                    $date = sprintf('%04d', $y);
-                    break;
-            }
+        // Science uses Y1
 
-            if ($date) {
-                $publication->setDate($date);
+        foreach (array('PY', 'DA', 'Y1') as $field) {
+            if (isset($data[$field])) {
+                $parts = array_map(
+                    'trim',
+                    explode('/', $data[$field])
+                );
+
+                if (strlen($parts[0]) && ctype_digit($parts[0])) {
+                    $publication->setYear($parts[0]);
+                } else {
+                    continue;
+                }
+
+                if (isset($parts[1]) && strlen($parts[1]) && ctype_digit($parts[1])) {
+                    $publication->setMonth($parts[1]);
+                } else {
+                    continue;
+                }
+
+                if (isset($parts[2]) && strlen($parts[2]) && ctype_digit($parts[2])) {
+                    $publication->setDay($parts[2]);
+                }
             }
         }
 
@@ -247,20 +261,41 @@ class BiblioPHP_Ris_Mapper
         $year = (int) $publication->getYear();
         if ($year > 0) {
             $string .= sprintf("PY  - %04d\r\n", $year);
+
+            // store date if at least month is given
+            $month = (int) $publication->getMonth();
+            if ($month > 0) {
+                $date = sprintf("%04d/%02d", $year, $month);
+
+                $day = (int) $publication->getDay();
+                if ($day > 0) {
+                    $date .= sprintf("/%02", $day);
+                }
+
+                $string .= sprintf("DA  - %s\r\n", $date);
+            }
         }
 
-        $ranges = $publication->getPages();
-        if (count($ranges) > 1) {
-            // The SP approach works properly with both Endnote X3 and
-            // Zotero 2.0.8, even though it is technically not within the spec
-            // https://jira.sakaiproject.org/browse/SAK-16740
-            $string .= sprintf("SP  - %s\r\n", implode(', ', $ranges));
-            $string .= sprintf("EP  - %d\r\n", $publication->getLastPage());
-        } elseif (count($ranges)) {
-            $string .= sprintf("SP  - %d\r\nEP  - %d\r\n",
-                $publication->getFirstPage(),
-                $publication->getLastPage()
-            );
+        $pages = $publication->getPages();
+
+        switch (count($pages)) {
+            case 0:
+                break;
+
+            case 1:
+                $string .= sprintf("SP  - %d\r\nEP  - %d\r\n",
+                    $publication->getFirstPage(),
+                    $publication->getLastPage()
+                );
+                break;
+
+            default:
+                // If there is more than one range of pages, store them in SP,
+                // and store the last page in EP. This approach supposedly works
+                // with both EndNote X3 and Zotero 2.0.8
+                $string .= sprintf("SP  - %s\r\n", implode(', ', $pages));
+                $string .= sprintf("EP  - %d\r\n", $publication->getLastPage());
+                break;
         }
 
         $vol = (int) $publication->getVolume();
