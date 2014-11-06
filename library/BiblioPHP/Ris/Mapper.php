@@ -73,11 +73,7 @@ class BiblioPHP_Ris_Mapper
         // DO, N1 (Science, AMS), L3 (Nature) or M3
         $doi = null;
 
-        if (isset($data['DO'])) {
-            $doi = trim($data['DO']);
-        }
-
-        foreach (array('N1', 'L3', 'M3') as $field) {
+        foreach (array('DO', 'N1', 'L3', 'M3') as $field) {
             if (empty($doi) && isset($data[$field])) {
                 $tmp = trim($data[$field]);
                 if (strncasecmp('doi:', $tmp, 4) === 0) {
@@ -85,6 +81,9 @@ class BiblioPHP_Ris_Mapper
                     $doi = ltrim(substr($tmp, 4));
                 } elseif (strncmp('10.', $tmp, 3) === 0) {
                     $doi = $tmp;
+                } elseif (strncmp('http://dx.doi.org/', $tmp, 18) === 0) {
+                    // some providers (Elsevier) put DOI URL here
+                    $doi = substr($tmp, 18);
                 }
             }
         }
