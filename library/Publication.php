@@ -38,9 +38,10 @@ class BiblioPHP_Publication
 
     protected $_language;
 
-    protected $_startPage;
-
-    protected $_endPage;
+    /**
+     * @var array
+     */
+    protected $_pages;
 
     protected $_volume;
 
@@ -165,6 +166,8 @@ class BiblioPHP_Publication
             }
         }
 
+        $array['pages'] = $this->getPages();
+
         return $array;
     }
 
@@ -191,6 +194,44 @@ class BiblioPHP_Publication
     }
 
     /**
+     * @param  string|array $pages
+     */
+    public function setPages($pages)
+    {
+        $this->_pages = self::normalizePages($pages);
+        return $this;
+    }
+
+    public function getPages()
+    {
+        $pages = array();
+        foreach ($this->_pages as $start => $end) {
+            if ($start === $end) {
+                $pages[] = $start;
+            } else {
+                $pages[] = $start . '-' . $end;
+            }
+        }
+        return $pages;
+    }
+
+    public function getLastPage()
+    {
+        if ($this->_pages) {
+            return end($this->_pages);
+        }
+    }
+
+    public function getFirstPage()
+    {
+        if ($this->_pages) {
+            foreach ($this->_pages as $start => $end) {
+                return $start;
+            }
+        }
+    }
+
+    /**
      * @param  string $string
      * @return string|false
      */
@@ -210,5 +251,70 @@ class BiblioPHP_Publication
         }
 
         return implode(', ', $parts);
+    }
+
+    /**
+     * @param  string|array $pages
+     * @return array
+     */
+    public static function normalizePages($pages)
+    {
+        if (!is_array($pages)) {
+            $pages = explode(',', $pages);
+        }
+        $result = array();
+        foreach ($pages as $part) {
+            $range = self::extractRange($part);
+            if ($range !== false) {
+                list($start, $end) = $range;
+                if (isset($result[$start])) {
+                    $result[$start] = max($end, $result[$start]);
+                } else {
+                    $result[$start] = $end;
+                }
+            }
+        }
+
+        // sort ranges by start page
+        ksort($result);
+
+        // normalize pages, merge intersecting or adjacent ranges
+        $prevEnd = null;
+        $prevStart = null;
+        foreach ($result as $start => $end) {
+            if ($prevEnd !== null && $start <= $prevEnd + 1) {
+                $result[$prevStart] = max($result[$prevStart], $end);
+                // expand range, and use it's right end as the in next iteration
+                $prevEnd = $result[$prevStart];
+                unset($result[$start]);
+                continue;
+            }
+
+            $prevStart = $start;
+            $prevEnd = $end;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param  string $range
+     * @return array|false
+     */
+    public static function extractRange($range)
+    {
+        $range = trim($range);
+
+        if (strpos($range, '-') === false) {
+            $start = $end = intval($range);
+        } else {
+            list($start, $end) = array_map('intval', explode('-', $range, 2));
+        }
+
+        if ($start > 0 && $end >= $start) {
+            return array($start, $end);
+        }
+
+        return false;
     }
 }

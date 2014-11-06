@@ -17,7 +17,8 @@ class BiblioPHP_Ris_Mapper
             BiblioPHP_Ris_PubTypeMap::toPubType($data['TY'])
         );
 
-        // check for title, look in TI first, then T1
+        //http://support.mendeley.com/customer/portal/articles/1006006-what-is-the-mapping-between-ris-files-and-mendeley-
+        // check for title, look in TI first, then T1, then CT (Mendeley)
         $title = null;
 
         if (isset($data['TI'])) {
@@ -25,6 +26,9 @@ class BiblioPHP_Ris_Mapper
         }
         if (empty($title) && isset($data['T1'])) {
             $title = trim($data['T1']);
+        }
+        if (empty($title) && isset($data['CT'])) {
+            $title = trim($data['CT']);
         }
 
         $publication->setTitle($title);
@@ -87,17 +91,23 @@ class BiblioPHP_Ris_Mapper
 
         $publication->setDoi($doi);
 
+        // set pages, page ranges if present are expected to be stored in SP
         if (isset($data['SP'])) {
-            $publication->setStartPage($data['SP']);
-        }
+            $sp = $data['SP'];
 
-        if (isset($data['EP'])) {
-            $publication->setEndPage($data['EP']);
+            if (strpos($sp, '-') !== false || strpos($sp, ',') !== false) {
+                $publication->setPages($sp);
+            } elseif (isset($data['EP'])) {
+                $publication->setPages($sp . '-' . (int) $data['EP']);
+            } else {
+                $publication->setPages($sp);
+            }
         }
 
         if (isset($data['UR'])) {
             $publication->setUrl($data['UR']);
         }
+        // TODO look for URL in L1, L2, L3, L4
 
         if (isset($data['SN'])) {
             $publication->setSerialNumber($data['SN']);
@@ -180,8 +190,8 @@ class BiblioPHP_Ris_Mapper
             }
         }
 
-        // editors
-        foreach (array('A2', 'A3') as $field) {
+        // editors, ED - Mendeley
+        foreach (array('A2', 'A3', 'ED') as $field) {
             if (isset($data[$field])) {
                 foreach ((array) $data[$field] as $author) {
                     $publication->addEditor($author);
@@ -216,7 +226,12 @@ class BiblioPHP_Ris_Mapper
 
         $string .= sprintf("TI  - %s\r\n", $this->normalizeSpace($publication->getTitle()));
         $string .= sprintf("T2  - %s\r\n", $this->normalizeSpace($publication->getJournal()));
-        $string .= sprintf("T3  - %s\r\n", $this->normalizeSpace($publication->getSeries()));
+
+        // volumeTitle
+        $series = $publication->getSeries();
+        if ($series) {
+            $string .= sprintf("T3  - %s\r\n", $this->normalizeSpace($series));
+        }
 
         foreach ($publication->getAuthors() as $author) {
             $string .= sprintf("AU  - %s\r\n", $this->normalizeSpace($author));
@@ -235,13 +250,18 @@ class BiblioPHP_Ris_Mapper
             $string .= sprintf("PY  - %04d\r\n", $year);
         }
 
-        $sp = (int) $publication->getStartPage();
-        if ($sp > 0) {
-            $ep = (int) $publication->getEndPage();
-            if ($ep <= 0) {
-                $ep = $sp;
-            }
-            $string .= sprintf("SP  - %d\r\nEP  - %d\r\n", $sp, $ep);
+        $ranges = $publication->getPages();
+        if (count($ranges) > 1) {
+            // The SP approach works properly with both Endnote X3 and
+            // Zotero 2.0.8, even though it is technically not within the spec
+            // https://jira.sakaiproject.org/browse/SAK-16740
+            $string .= sprintf("SP  - %s\r\n", implode(', ', $ranges));
+            $string .= sprintf("EP  - %d\r\n", $publication->getLastPage());
+        } elseif (count($ranges)) {
+            $string .= sprintf("SP  - %d\r\nEP  - %d\r\n",
+                $publication->getFirstPage(),
+                $publication->getLastPage()
+            );
         }
 
         $vol = (int) $publication->getVolume();
@@ -257,6 +277,11 @@ class BiblioPHP_Ris_Mapper
         $publisher = $publication->getPublisher();
         if ($publisher) {
             $string .= sprintf("PB  - %s\r\n", $this->normalizeSpace($publisher));
+        }
+
+        $lang = $publication->getLanguage();
+        if ($lang) {
+            $string .= sprintf("LA  - %s\r\n", $this->normalizeSpace($lang));
         }
 
         $sn = $publication->getSerialNumber();
@@ -288,6 +313,6 @@ class BiblioPHP_Ris_Mapper
 
     public function normalizeSpace($value)
     {
-        return preg_replace('/\s+/', ' ', $value);
+        return trim(preg_replace('/\s+/', ' ', $value));
     }
 }
