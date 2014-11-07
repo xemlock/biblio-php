@@ -114,17 +114,19 @@ class BiblioPHP_Bibtex_Parser
                     $value = intval($value);
                     break;
 
+                case 'month':
+                    $value = self::normalizeMonth($value);
+                    break;
+
                 default:
                     // spaces may be part of quoted/braced strings
                     $value = trim($value);
                     break;
             }
 
-            if (isset($entry[$key])) {
-                if (!is_array($entry[$key])) {
-                    $entry[$key] = array($entry[$key]);
-                }
-                $entry[$key][] = $value;
+            if ($key === 'keywords') {
+                // some providers (ScienceDirect) put keywords in separate key=value pairs
+                $entry['keywords'][] = $value;
             } else {
                 $entry[$key] = $value;
             }
@@ -133,12 +135,37 @@ class BiblioPHP_Bibtex_Parser
         return $entry;
     }
 
+    public static function normalizeKeywords()
+    {
+        
+    }
+
+    /**
+     * @return int
+     */
+    public static function normalizeMonth($month)
+    {
+        if (!ctype_digit($month)) {
+            $months = array_flip(
+                array(
+                    0,
+                    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+                    'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+                )
+            );
+            $m = substr(strtolower($value), 0, 3);
+            if (isset($months[$m])) {
+                $month = $months[$m];
+            }
+        }
+        $month = intval($month);
+        return 0 < $month && $month <= 12 ? $month : 0;
+    }
+
     public static function normalizePages($pages)
     {
-        if (preg_match('/(?P<pageStart>\d+)(\s*--?\s*(?P<pageEnd>\d+))?/', $pages, $match)) {
-            return $match['pageStart'] . '-' . $match['pageEnd'];
-        }
-        return intval($pages);
+        // replace multiple dashes with a single one
+        return preg_replace('/--+/', '-', $pages);
     }
 
     public static function normalizeAuthors($authors)
