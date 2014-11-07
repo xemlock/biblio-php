@@ -122,7 +122,16 @@ class BiblioPHP_Ris_Parser
         );
 
         while (($line = $this->_getNonEmptyLine()) !== false) {
-            $line = ltrim($line); // do not rtrim, as it invalidates ER field
+            $line = trim($line);
+
+            // check for ER record in the first place, some editors do not
+            // use full form of it (i.e. the space after dash is missing)
+
+            if (strncasecmp($line, 'ER  -', 5) === 0) {
+                $this->_field = null;
+                $this->_debug("End of record\n");
+                break;
+            }
 
             if (!preg_match('/^(?P<key>[A-Z][A-Z0-9])  - /i', $line, $match)) {
                 // if non-empty line and of invalid syntax, assume (broken)
@@ -136,23 +145,17 @@ class BiblioPHP_Ris_Parser
                     continue;
                 }
             }
+
             $key = strtoupper($match['key']);
 
-            if ($key === 'ER') {
-                $this->_debug("End of record\n");
-                break;
+            if ($key === 'TY') {
+                // ignore any type field here
+                $this->_debug("Ignoring record type re-declaration\n");
+                continue;
             }
 
             $this->_field = $key;
             $value = trim(substr($line, 6));
-
-            if ($key === 'TY') {
-                // record type must always be a string, and never expanded
-                // to an array of types
-                $this->_debug("Record type declaration\n");
-                $entry['TY'] = $value;
-                continue;
-            }
 
             if (isset($entry[$key])) {
                 if (!is_array($entry[$key])) {

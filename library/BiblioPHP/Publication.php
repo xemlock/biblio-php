@@ -6,12 +6,15 @@ class BiblioPHP_Publication
      * One of BiblioPHP_PublicationType constants
      * @var string
      */
-    protected $_type;
+    protected $_pubType;
+
+    protected $_citeKey;
 
     protected $_title;
 
     /**
-     * Journal title, book title, or conference title in case of conference paper
+     * Journal title, book title, or conference title in case of
+     * conference paper
      * @var string
      */
     protected $_journal;
@@ -62,6 +65,35 @@ class BiblioPHP_Publication
     protected $_keywords;
 
     protected $_notes;
+
+    public function __construct(array $data = null)
+    {
+        if ($data) {
+            $this->setFromArray($data);
+        }
+    }
+
+    public function setDoi($doi)
+    {
+        $doi = trim($doi);
+
+        if (strncasecmp('doi:', $doi, 4) === 0) {
+            $doi = ltrim(substr($doi, 4));
+        } elseif (strncmp('http://dx.doi.org/', $doi, 18) === 0) {
+            $doi = substr($doi, 18);
+        }
+
+        // DOI identifier must begin with 10. and have a non-empty suffix
+        // separated by a forward slash
+        if ((substr($doi, 0, 3) === '10.') &&
+            (($pos = strpos($doi, '/')) !== false) &&
+            ($pos < strlen($doi) - 2)
+        ) {
+            $this->_doi = $doi;
+        }
+
+        return $this;
+    }
 
     public function addKeyword($keyword)
     {

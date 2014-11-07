@@ -2,34 +2,41 @@
 
 class BiblioPHP_Ris_Writer
 {
+    /**
+     * @param  BiblioPHP_Publication $publication
+     * @return string
+     */
     public function write(BiblioPHP_Publication $publication)
     {
-        $string = sprintf("TY  - %s\r\n", BiblioPHP_Ris_PubTypeMap::fromPubType($publication->getType()));
+        $string = array();
 
-        $string .= sprintf("TI  - %s\r\n", $this->normalizeSpace($publication->getTitle()));
-        $string .= sprintf("T2  - %s\r\n", $this->normalizeSpace($publication->getJournal()));
+        $type = BiblioPHP_Ris_PubTypeMap::fromPubType($publication->getPubType());
+        $string[] = $this->formatField('TY', $type);
+
+        $string[] = $this->formatField('TI', $publication->getTitle());
+        $string[] = $this->formatField('T2', $publication->getJournal());
 
         // volume or series title
         $series = $publication->getSeries();
         if ($series) {
-            $string .= sprintf("T3  - %s\r\n", $this->normalizeSpace($series));
+            $string[] = $this->formatField('T3', $series);
         }
 
         foreach ($publication->getAuthors() as $author) {
-            $string .= sprintf("AU  - %s\r\n", $this->normalizeSpace($author));
+            $string[] = $this->formatField('AU', $this->formatAuthor($author));
         }
 
         foreach ($publication->getEditors() as $editor) {
-            $string .= sprintf("A2  - %s\r\n", $this->normalizeSpace($editor));
+            $string[] = $this->formatField('A2', $this->formatAuthor($editor));
         }
 
         foreach ($publication->getTranslators() as $translator) {
-            $string .= sprintf("A4  - %s\r\n", $this->normalizeSpace($editor));
+            $string[] = $this->formatField('A4', $this->formatAuthor($translator));
         }
 
         $year = (int) $publication->getYear();
         if ($year > 0) {
-            $string .= sprintf("PY  - %04d\r\n", $year);
+            $string[] = $this->formatField('PY', $year);
 
             // wrtie date if at least month is given
             $month = (int) $publication->getMonth();
@@ -41,7 +48,7 @@ class BiblioPHP_Ris_Writer
                     $date .= sprintf("/%02", $day);
                 }
 
-                $string .= sprintf("DA  - %s\r\n", $date);
+                $string[] = $this->formatField('DA', $date);
             }
         }
 
@@ -51,72 +58,85 @@ class BiblioPHP_Ris_Writer
                 break;
 
             case 1:
-                $string .= sprintf("SP  - %d\r\nEP  - %d\r\n",
-                    $publication->getFirstPage(),
-                    $publication->getLastPage()
-                );
+                $string[] = $this->formatField('SP', $publication->getFirstPage());
+                $string[] = $this->formatField('EP', $publication->getLastPage());
                 break;
 
             default:
                 // If there is more than one range of pages, store them in SP,
                 // and store the last page in EP. This approach supposedly works
                 // with both EndNote X3 and some others
-                $string .= sprintf("SP  - %s\r\n", implode(', ', $pages));
-                $string .= sprintf("EP  - %d\r\n", $publication->getLastPage());
+                $string[] = $this->formatField('SP', implode(', ', $pages));
+                $string[] = $this->formatField('EP', $publication->getLastPage());
                 break;
         }
 
-        $lang = $publication->getLanguage();
-        if ($lang) {
-            $string .= sprintf("LA  - %s\r\n", $this->normalizeSpace($lang));
+        $language = $publication->getLanguage();
+        if ($language) {
+            $string[] = $this->formatField('LA', $language);
         }
 
-        $vol = (int) $publication->getVolume();
-        if ($vol > 0) {
-            $string .= sprintf("VL  - %d\r\n", $vol);
+        $volume = (int) $publication->getVolume();
+        if ($volume > 0) {
+            $string[] = $this->formatField('VL', $volume);
         }
 
         $issue = (int) $publication->getIssue();
         if ($issue > 0) {
-            $string .= sprintf("IS  - %d\r\n", $issue);
+            $string[] = $this->formatField('IS', $issue);
         }
 
         $publisher = $publication->getPublisher();
         if ($publisher) {
-            $string .= sprintf("PB  - %s\r\n", $this->normalizeSpace($publisher));
+            $string[] = $this->formatField('PB', $publisher);
         }
 
         $sn = $publication->getSerialNumber();
         if ($sn) {
-            $string .= sprintf("SN  - %s\r\n", $this->normalizeSpace($sn));
+            $string[] = $this->formatField('SN', $sn);
         }
 
         $doi = $publication->getDoi();
         if ($doi) {
-            $string .= sprintf("DO  - %s\r\n", $this->normalizeSpace($doi));
+            $string[] = $this->formatField('DO', $doi);
         }
 
         $url = $publication->getUrl();
         if ($url) {
-            $string .= sprintf("UR  - %s\r\n", $this->normalizeSpace($url));
+            $string[] = $this->formatField('UR', $url);
         }
 
         foreach ($publication->getKeywords() as $keyword) {
-            $string .= sprintf("KW  - %s\r\n", $this->normalizeSpace($keyword));
+            $string[] = $this->formatField('KW', $keyword);
         }
 
         $abstract = $publication->getAbstract();
         if ($abstract) {
-            $string .= sprintf("AB  - %s\r\n", $this->normalizeSpace($abstract));
+            $string[] = $this->formatField('AB', $abstract);
         }
 
-        $string .= "ER  - \r\n";
+        $string[] = $this->formatField('ER');
 
-        return $string;
+        return implode("\r\n", $string);
     }
 
-    public function normalizeSpace($value)
+    /**
+     * @param  string $name
+     * @param  mixed $value
+     * @return string
+     */
+    public function formatField($name, $value = '')
     {
-        return trim(preg_replace('/\s+/', ' ', $value));
+        $name = strtoupper(substr($name, 0, 2));
+        $value = trim(preg_replace('/\s+/', ' ', $value));
+        return sprintf("%2s  - %s", $name, $value);
+    }
+
+    /**
+     * @return string
+     */
+    public function formatAuthor($author)
+    {
+        return $author;
     }
 }

@@ -12,12 +12,12 @@ class BiblioPHP_Ris_Mapper
             throw new InvalidArgumentException('Invalid data provided');
         }
 
-        $publication = new BiblioPHP_Publication();
-        $publication->setType(
-            BiblioPHP_Ris_PubTypeMap::toPubType($data['TY'])
-        );
+        $pubType = BiblioPHP_Ris_PubTypeMap::toPubType($data['TY']);
 
-        //http://support.mendeley.com/customer/portal/articles/1006006-what-is-the-mapping-between-ris-files-and-mendeley-
+        $publication = new BiblioPHP_Publication();
+        $publication->setPubType($pubType);
+
+        // http://support.mendeley.com/customer/portal/articles/1006006-what-is-the-mapping-between-ris-files-and-mendeley-
         // check for title, look in TI first, then T1, then CT (Mendeley)
         $title = null;
 
