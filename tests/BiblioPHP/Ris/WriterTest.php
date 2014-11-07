@@ -13,10 +13,11 @@ class BiblioPHP_Ris_WriterTest extends PHPUnit_Framework_TestCase
     {
         $writer = new BiblioPHP_Ris_Writer();
 
-        $publication = new BiblioPHP_Publication();
-        $publication->setType(BiblioPHP_PublicationType::ARTICLE);
+        $publication = new BiblioPHP_Publication(array(
+            'pubType' => BiblioPHP_PublicationType::ARTICLE,
+            'pages'   => '5-5, 12-14,13-15, 11-11,  17 - 19, 20, 21',
+        ));
 
-        $publication->setPages('5-5, 12-14,13-15, 11-11,  17 - 19, 20, 21');
         $this->assertContains(
             "SP  - 5, 11-15, 17-21\r\nEP  - 21\r\n",
             $writer->write($publication)

@@ -12,11 +12,15 @@ class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
 {
     public function testMapper()
     {
-        $mapper = new BiblioPHP_Ris_Mapper();
         $parser = new BiblioPHP_Ris_Parser();
+        $mapper = new BiblioPHP_Ris_Mapper();
 
-        $entries = $parser->parseFile(dirname(__FILE__) . '/../../assets/ams.ris');
+        $entries = $parser->parseFile(test_asset('ams.ris'));
         $publication = $mapper->fromArray($entries[0]);
+
+        $this->assertEquals($publication->getPubType(), BiblioPHP_PublicationType::ARTICLE);
+        $this->assertEquals($publication->getDoi(), '10.1175/JAS-D-12-0295.1');
+        $this->assertEquals($publication->getYear(), 2013);
     }
 
     public function testPages()
