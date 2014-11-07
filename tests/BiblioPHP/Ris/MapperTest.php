@@ -33,11 +33,6 @@ class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
             '17-21',
         ));
 
-        $this->assertContains(
-            "SP  - 5, 11-15, 17-21\r\nEP  - 21\r\n",
-            $mapper->toString($publication)
-        );
-
         $publication = $mapper->fromArray(array(
             'TY' => 'GEN',
             'SP' => '11, 12 - 21',
@@ -46,10 +41,5 @@ class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($publication->getPages(), array(
             '11-21',
         ));
-
-        $this->assertContains(
-            "SP  - 11\r\nEP  - 21\r\n",
-            $mapper->toString($publication)
-        );
     }
 }
