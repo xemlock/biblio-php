@@ -56,18 +56,30 @@ class BiblioPHP_Bibtex_Parser
 
         $entryType = substr($token['value'], 1);
 
-        $token = $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_STRING);
+        // handle entries with empty reftype
+
+        $token = $this->_getToken();
 
         if (empty($token)) {
             return false;
         }
 
+        // expect 
+        if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_STRING) {
+            $citeKey = $token['value'];
+        } else {
+            $citeKey = null;
+        }
+
         $entry = array(
-            'type' => strtolower($entryType),
-            'citeKey' => $token['value'],
+            'entryType' => strtolower($entryType),
+            'citeKey' => $citeKey,
         );
 
-        $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_COMMA);
+        // consume comma, if not already consumed
+        if ($token['type'] !== BiblioPHP_Bibtex_Tokenizer::T_COMMA) {
+            $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_COMMA);
+        }
 
         while ($token = $this->_getToken()) {
             if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_END) {
@@ -75,7 +87,7 @@ class BiblioPHP_Bibtex_Parser
             }
 
             $keyToken = $token;
-            
+
             if (!$this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_SEPARATOR)) {
                 break;
             }
@@ -83,9 +95,14 @@ class BiblioPHP_Bibtex_Parser
             $valueToken = $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_STRING);
             $value = $valueToken['value'];
 
+            $end = false;
+
             while ($token = $this->_getToken()) {
                 if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_END) {
-                    break(2);
+                    // ok, after string value record ends, process that string
+                    // and finish processing of this entry
+                    $end = true;
+                    break;
                 }
 
                 if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_CONCAT) {
@@ -103,7 +120,7 @@ class BiblioPHP_Bibtex_Parser
             switch ($key) {
                 case 'author':
                 case 'editor':
-                    $value = self::normalizeAuthors($value);
+                    $value = $value;
                     break;
 
                 case 'pages':
@@ -111,6 +128,7 @@ class BiblioPHP_Bibtex_Parser
                     break;
 
                 case 'year':
+                case 'day':
                     $value = intval($value);
                     break;
 
@@ -130,14 +148,13 @@ class BiblioPHP_Bibtex_Parser
             } else {
                 $entry[$key] = $value;
             }
+
+            if ($end) {
+                break;
+            }
         }
 
         return $entry;
-    }
-
-    public static function normalizeKeywords()
-    {
-        
     }
 
     /**
@@ -145,6 +162,9 @@ class BiblioPHP_Bibtex_Parser
      */
     public static function normalizeMonth($month)
     {
+        $month = str_replace('~', ' ', $month);
+
+        // TODO handle all formats: mmm, dd mmm, mmm dd
         if (!ctype_digit($month)) {
             $months = array_flip(
                 array(
@@ -166,52 +186,5 @@ class BiblioPHP_Bibtex_Parser
     {
         // replace multiple dashes with a single one
         return preg_replace('/--+/', '-', $pages);
-    }
-
-    public static function normalizeAuthors($authors)
-    {
-        // BibTeX allows three possible forms for the name:
-        // "First von Last"
-        // "von Last, First"
-        // "von Last, Jr, First"
-
-        $authors = array_map(
-            'trim',
-            preg_split('/\s+and\s+/i', $authors)
-        );
-        foreach ($authors as $index => $author) {
-            $normalized = array(
-                'firstName' => '',
-                'lastName'  => '',
-                'suffix'    => '',
-            );
-            $parts = preg_split('/\s*,\s*/', $author);
-            if (count($parts) >= 3) {
-                $normalized['lastName'] = $parts[0];
-                $normalized['suffix'] = $parts[1];
-                $normalized['firstName'] = $parts[2];
-            } elseif (count($parts) === 2) {
-                $normalized['lastName'] = $parts[0];
-                $normalized['firstName'] = $parts[1];
-            } else {
-                $parts = preg_split('/\s+/', $author);
-                // last name part is either a last token,
-                // or starts with first lower case letter
-                // BibTeX knows where one part ends and the other begins
-                // because the tokens in the von part begin with lower-case letters.
-                // 
-                $boundary = count($parts) - 1;
-                for ($i = 0; $i < count($parts); ++$i) {
-                    if (ctype_lower(substr($parts[$i], 0, 1))) {
-                        $boundary = $i;
-                        break;
-                    }
-                }
-                $normalized['firstName'] = implode(' ', array_slice($parts, 0, $boundary));
-                $normalized['lastName'] = implode(' ', array_slice($parts, $boundary));
-            }
-            $authors[$index] = $normalized;
-        }
-        return $authors;
     }
 }

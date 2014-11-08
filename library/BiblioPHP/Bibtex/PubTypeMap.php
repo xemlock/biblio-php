@@ -8,79 +8,79 @@ abstract class BiblioPHP_Bibtex_PubTypeMap
 
         switch ($value) {
             case 'article':
-                return PublicationType::ARTICLE;
+                return BiblioPHP_PublicationType::ARTICLE;
 
             case 'book':
-                return PublicationType::BOOK;
+                return BiblioPHP_PublicationType::BOOK;
 
             case 'booklet':
-                return PublicationType::BOOKLET;
+                return BiblioPHP_PublicationType::BOOKLET;
 
             case 'inbook':
             case 'incollection':
-                return PublicationType::CHAPTER;
+                return BiblioPHP_PublicationType::CHAPTER;
 
             case 'proceedings':
-                return PublicationType::PROCEEDINGS;
+                return BiblioPHP_PublicationType::PROCEEDINGS;
 
             case 'inproceedings':
             case 'conference':
-                return PublicationType::CONF_PAPER;
+                return BiblioPHP_PublicationType::CONF_PAPER;
 
             case 'manual':
-                return PublicationType::MANUAL;
+                return BiblioPHP_PublicationType::MANUAL;
 
             case 'mastersthesis':
-                return PublicationType::MASTER_THESIS;
+                return BiblioPHP_PublicationType::MASTER_THESIS;
 
             case 'phdthesis':
-                return PublicationType::PHD_THESIS;
+                return BiblioPHP_PublicationType::PHD_THESIS;
 
             case 'techreport':
-                return PublicationType::REPORT;
+                return BiblioPHP_PublicationType::REPORT;
 
             case 'unpublished':
-                return PublicationType::UNPUBLISHED;
+                return BiblioPHP_PublicationType::UNPUBLISHED;
 
             default:
-                return PublicationType::GENERIC;
+                return BiblioPHP_PublicationType::GENERIC;
         }
     }
 
     public static function fromPubType($pubType)
     {
         switch ($pubType) {
-            case PublicationType::ARTICLE:
+            case BiblioPHP_PublicationType::ARTICLE:
                 return 'article';
 
-            case PublicationType::BOOK:
+            case BiblioPHP_PublicationType::BOOK:
                 return 'book';
 
-            case PublicationType::BOOKLET:
+            case BiblioPHP_PublicationType::BOOKLET:
                 return 'booklet';
 
-            case PublicationType::CHAPTER:
+            case BiblioPHP_PublicationType::CHAPTER:
                 return 'inbook';
 
-            case PublicationType::CONF_PAPER:
+            case BiblioPHP_PublicationType::CONF_PAPER:
                 return 'inproceedings';
 
-            case PublicationType::MANUAL:
+            case BiblioPHP_PublicationType::MANUAL:
                 return 'manual';
 
-            case PublicationType::MASTER_THESIS:
+            case BiblioPHP_PublicationType::MASTER_THESIS:
                 return 'mastersthesis';
 
-            case PublicationType::PHD_THESIS:
+            case BiblioPHP_PublicationType::PHD_THESIS:
                 return 'phdthesis';
 
-            case PublicationType::PROCEEDINGS:
+            case BiblioPHP_PublicationType::PROCEEDINGS:
                 return 'proceedings';
 
-            case PublicationType::REPORT:
+            case BiblioPHP_PublicationType::REPORT:
                 return 'techreport';
 
-            case PublicationType::UNPUBLISHED:
+            case BiblioPHP_PublicationType::UNPUBLISHED:
                 return 'unpublished';
 
             default:

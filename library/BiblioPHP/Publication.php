@@ -77,14 +77,19 @@ class BiblioPHP_Publication
     {
         $doi = trim($doi);
 
+        // strip off doi: prefix
         if (strncasecmp('doi:', $doi, 4) === 0) {
             $doi = ltrim(substr($doi, 4));
-        } elseif (strncmp('http://dx.doi.org/', $doi, 18) === 0) {
-            $doi = substr($doi, 18);
         }
 
-        // DOI identifier must begin with 10. and have a non-empty suffix
-        // separated by a forward slash
+        // extract DOI from URL
+        if (preg_match('/^http(s)?:\/\/.+\/(?P<doi>10\..+)/i', $doi, $match)) {
+            $doi = $match['doi'];
+        }
+
+        // Perform simple DOI format validation:
+        // - identifier must begin with 10.
+        // - must have a non-empty suffix separated by a forward slash
         if ((substr($doi, 0, 3) === '10.') &&
             (($pos = strpos($doi, '/')) !== false) &&
             ($pos < strlen($doi) - 2)
