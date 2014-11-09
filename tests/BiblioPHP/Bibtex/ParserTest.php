@@ -36,10 +36,28 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
                 author = {Ludwig van Beethoven and Strauss, Jr., Johann}
             }
         ');
+        $this->assertEquals(count($entries), 1);
         $this->assertEquals(
             $entries[0]['author'],
             'Ludwig van Beethoven and Strauss, Jr., Johann'
         );
+    }
+
+    public function testSpacesInCiteKey()
+    {
+        $parser = new BiblioPHP_Bibtex_Parser();
+        $entries = $parser->parse('
+            @Book{
+                inv:alid CiteKey,
+                title = {Invalid cite key},
+            }
+        ');
+        $this->assertEquals(count($entries), 1);
+        $this->assertEquals($entries[0], array(
+            'entryType' => 'book',
+            'citeKey'   => 'inv:alid',
+            'title'     => 'Invalid cite key',
+        ));
     }
 
     public function testParseFile()
