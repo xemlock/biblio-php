@@ -250,7 +250,7 @@ class BiblioPHP_Publication
     public function getPages()
     {
         $pages = array();
-        foreach ($this->_pages as $start => $end) {
+        foreach ((array) $this->_pages as $start => $end) {
             if ($start === $end) {
                 $pages[] = $start;
             } else {
