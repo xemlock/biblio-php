@@ -186,16 +186,18 @@ class BiblioPHP_Bibtex_Mapper
 
     public function normalizeKeywords($keywords)
     {
-        // detect separator, EndNote uses newlines
-        $keywords = str_replace(array("\r\n", "\r"), "\n", $keywords);
+        if (is_string($keywords)) {
+            // detect separator, EndNote uses newlines
+            $keywords = str_replace(array("\r\n", "\r"), "\n", $keywords);
 
-        if (strpos($keywords, ',') !== false) {
-            $keywords = explode(',', $keywords);
-        } else {
-            $keywords = explode("\n", $keywords);
+            if (strpos($keywords, ',') !== false) {
+                $keywords = explode(',', $keywords);
+            } else {
+                $keywords = explode("\n", $keywords);
+            }
         }
 
-        $keywords = array_map('trim', $keywords);
+        $keywords = array_map('trim', (array) $keywords);
         $keywords = array_filter($keywords, 'strlen');
 
         return $keywords;
