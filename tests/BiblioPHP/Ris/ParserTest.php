@@ -7,7 +7,8 @@ class BiblioPHP_Ris_ParserTest extends PHPUnit_Framework_TestCase
     public function testParseFromFile()
     {
         $parser = new BiblioPHP_Ris_Parser();
-        $entries = $parser->parseFile(test_asset('ams.ris'));
+        $parser = $parser->setInputFile(test_asset('ams.ris'));
+        $parser->next();
     }
 
     public function testParse()
@@ -30,18 +31,25 @@ ER  -
 
 EOS;
         $parser = new BiblioPHP_Ris_Parser();
-        $entries = $parser->parse($string);
+        $parser->setInputString($string);
 
-        $this->assertEquals($entries[0]['TY'], 'JOUR');
-        $this->assertEquals($entries[0]['SP'], '1128');
-        $this->assertEquals($entries[0]['UR'], 'http://dx.doi.org/10.1038/nm.2447');
+        $entry = $parser->next();
+
+        $this->assertEquals($entry['TY'], 'JOUR');
+        $this->assertEquals($entry['SP'], '1128');
+        $this->assertEquals($entry['UR'], 'http://dx.doi.org/10.1038/nm.2447');
 
     }
 
     public function testParseInvalidString()
     {
         $parser = new BiblioPHP_Ris_Parser();
-        $entries = $parser->parse('This is an invalid input');
+        $parser->setInputString('This is an invalid input');
+
+        $entries = array();
+        while ($entry = $parser->next()) {
+            $entries[] = $entry;
+        }
 
         $this->assertEquals($entries, array());
     }
@@ -52,7 +60,7 @@ EOS;
     public function testParseInvalidStream()
     {
         $parser = new BiblioPHP_Ris_Parser();
-        $parser->parseStream(false);
+        $entry = $parser->setInputStream(false)->next();
     }
 
     /**
@@ -61,16 +69,16 @@ EOS;
     public function testParseInvalidFile()
     {
         $parser = new BiblioPHP_Ris_Parser();
-        $parser->parseFile('?');
+        $entry = $parser->setInputFile('?')->next();
     }
 
     public function testEndNoteFile()
     {
         $parser = new BiblioPHP_Ris_Parser();
-        $entries = $parser->parseFile(test_asset('ams.endnote.ris'));
+        $entry = $parser->setInputFile(test_asset('ams.endnote.ris'))->next();
 
-        $this->assertEquals($entries[0]['TY'], 'JOUR');
-        $this->assertEquals($entries[0]['KW'], array(
+        $this->assertEquals($entry['TY'], 'JOUR');
+        $this->assertEquals($entry['KW'], array(
             'Keyword1',
             'Keyword2',
             'Keyword3 with more than one word',

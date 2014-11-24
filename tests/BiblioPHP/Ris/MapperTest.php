@@ -15,7 +15,13 @@ class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
         $parser = new BiblioPHP_Ris_Parser();
         $mapper = new BiblioPHP_Ris_Mapper();
 
-        $entries = $parser->parseFile(test_asset('ams.ris'));
+        $parser->setInputFile(test_asset('ams.ris'));
+
+        $entries = array();
+        while ($entry = $parser->next()) {
+            $entries[] = $entry;
+        }
+
         $publication = $mapper->fromArray($entries[0]);
 
         $this->assertEquals($publication->getPubType(), BiblioPHP_PublicationType::ARTICLE);

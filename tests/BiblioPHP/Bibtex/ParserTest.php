@@ -8,7 +8,7 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
     public function testParseString()
     {
         $parser = new BiblioPHP_Bibtex_Parser();
-        $entries = $parser->parse('
+        $parser->setInputString('
             @Article {
                 test:2014,
                 key1 = value1 # " @value2 " # {va{lue}3},
@@ -16,6 +16,11 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
                 key2 = {value4},
             }
         ');
+
+        $entries = array();
+        while ($entry = $parser->next()) {
+            $entries[] = $entry;
+        }
 
         $this->assertEquals($entries, array(
             array(
@@ -30,12 +35,18 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
     public function testEmptyCiteKey()
     {
         $parser = new BiblioPHP_Bibtex_Parser();
-        $entries = $parser->parse('
+        $parser = $parser->setInputString('
             @Article{
                 ,
                 author = {Ludwig van Beethoven and Strauss, Jr., Johann}
             }
         ');
+
+        $entries = array();
+        while ($entry = $parser->next()) {
+            $entries[] = $entry;
+        }
+
         $this->assertEquals(count($entries), 1);
         $this->assertEquals(
             $entries[0]['author'],
@@ -46,12 +57,18 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
     public function testSpacesInCiteKey()
     {
         $parser = new BiblioPHP_Bibtex_Parser();
-        $entries = $parser->parse('
+        $parser = $parser->setInputString('
             @Book{
                 inv:alid CiteKey,
                 title = {Invalid cite key},
             }
         ');
+
+        $entries = array();
+        while ($entry = $parser->next()) {
+            $entries[] = $entry;
+        }
+
         $this->assertEquals(count($entries), 1);
         $this->assertEquals($entries[0], array(
             'entryType' => 'book',
@@ -63,8 +80,7 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
     public function testParseFile()
     {
         $parser = new BiblioPHP_Bibtex_Parser();
-
-        $string = '
+        $parser->setInputString('
             @article{Ishii20131903,
                 title = "Cellular pattern formation in detonation propagation ",
                 keywords = "Detonation",
@@ -73,11 +89,12 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
                 keywords = "Particle entrainment",
                 keywords = "Adhesive force ",
             }
-        ';
+        ');
 
-        $result = $parser->parse($string);
+        $result = $parser->next();
 
-        $this->assertEquals($result[0]['keywords'], array(
+        $this->assertInternalType('array', $result);
+        $this->assertEquals($result['keywords'], array(
             'Detonation',
             'Cellular pattern',
             'Smoke foil record',
