@@ -77,8 +77,7 @@ class BiblioPHP_Bibtex_Tokenizer
 
     public function setStream($stream)
     {
-        $meta = @stream_get_meta_data($stream);
-        if (empty($meta)) {
+        if (!is_resource($stream) || get_resource_type($stream) !== 'stream') {
             throw new InvalidArgumentException('Invalid stream resource supplied');
         }
 

@@ -1,52 +1,54 @@
 <?php
 
-class BiblioPHP_Bibtex_Parser
+class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
 {
+    /**
+     * @var BiblioPHP_Bibtex_Tokenizer
+     */
     protected $_tokenizer;
+
+    /**
+     * @var array|false
+     */
+    protected $_current;
 
     public function __construct()
     {
         $this->_tokenizer = new BiblioPHP_Bibtex_Tokenizer();
     }
 
-    public function parseStream($stream)
+    public function __destruct()
     {
+        $this->_tokenizer->closeStream();
+    }
+
+    public function setInputStream($stream)
+    {
+        $this->_current = false;
         $this->_tokenizer->setStream($stream);
-        return $this->_parse();
+        return $this;
     }
 
-    public function parseFile($file)
+    public function setInputFile($file)
     {
+        $this->_current = false;
         $this->_tokenizer->setFile($file);
-        return $this->_parse();
+        return $this;
     }
 
-    public function parse($string)
+    public function setInputString($string)
     {
+        $this->_current = false;
         $this->_tokenizer->setString($string);
-        return $this->_parse();
+        return $this;
     }
 
-    protected function _parse()
+    public function current()
     {
-        $entries = array();
-        while (($entry = $this->_parseEntry()) !== false) {
-            $entries[] = $entry;
-        }
-        return $entries;
+        return $this->_current;
     }
 
-    protected function _getToken($type = null)
-    {
-        while (($token = $this->_tokenizer->nextToken()) !== false) {
-            if ($type === null || $token['type'] === $type) {
-                return $token;
-            }
-        }
-        return false;
-    }
-
-    protected function _parseEntry()
+    public function next()
     {
         $token = $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_TYPE);
 
@@ -154,7 +156,17 @@ class BiblioPHP_Bibtex_Parser
             }
         }
 
-        return $entry;
+        return $this->_current = $entry;
+    }
+
+    protected function _getToken($type = null)
+    {
+        while (($token = $this->_tokenizer->nextToken()) !== false) {
+            if ($type === null || $token['type'] === $type) {
+                return $token;
+            }
+        }
+        return false;
     }
 
     /**
@@ -173,7 +185,7 @@ class BiblioPHP_Bibtex_Parser
                     'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
                 )
             );
-            $m = substr(strtolower($value), 0, 3);
+            $m = substr(strtolower($month), 0, 3);
             if (isset($months[$m])) {
                 $month = $months[$m];
             }

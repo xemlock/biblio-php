@@ -6,7 +6,7 @@
  * http://en.wikipedia.org/wiki/RIS_%28file_format%29
  * http://www.adeptscience.co.uk/kb/article/FE26
  */
-class BiblioPHP_Ris_Parser
+class BiblioPHP_Ris_Parser implements BiblioPHP_ParserInterface
 {
     /**
      * @var stream
@@ -18,56 +18,62 @@ class BiblioPHP_Ris_Parser
      */
     protected $_line;
 
+    protected $_current;
+
+    protected $_position;
+
+    public function __destruct()
+    {
+        if ($this->_stream) {
+            fclose($this->_stream);
+            $this->_stream = null;
+        }
+    }
+
     /**
      * @param  string $string
-     * @return array
+     * @return BiblioPHP_Ris_Parser
      */
-    public function parse($string)
+    public function setInputString($string)
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $string);
         rewind($stream);
-        return $this->parseStream($stream);
+        return $this->setInputStream($stream);
     }
 
     /**
      * @param  string $file
-     * @return array
+     * @return BiblioPHP_Ris_Parser
      * @throws Exception
      */
-    public function parseFile($file)
+    public function setInputFile($file)
     {
         $stream = @fopen($file, 'rb');
         if (!$stream) {
             throw new Exception(sprintf('Unable to open file: %s', $file));
         }
-        return $this->parseStream($stream);
+        return $this->setInputStream($stream);
     }
 
     /**
      * @param  resource $stream
-     * @return array
+     * @return BiblioPHP_Ris_Parser
      * @throws InvalidArgumentException
      */
-    public function parseStream($stream)
+    public function setInputStream($stream)
     {
-        $meta = @stream_get_meta_data($stream);
-
-        if (empty($meta)) {
+        if (!is_resource($stream) || get_resource_type($stream) !== 'stream') {
             throw new InvalidArgumentException('Invalid stream provided');
         }
 
         $this->_line = 0;
         $this->_stream = $stream;
 
-        $entries = array();
-        while ($entry = $this->_parseEntry()) {
-            $entries[] = $entry;
-        }
+        $this->_position = null;
+        $this->_current = false;
 
-        fclose($this->_stream);
-
-        return $entries;
+        return $this;
     }
 
     /**
@@ -75,6 +81,9 @@ class BiblioPHP_Ris_Parser
      */
     protected function _getLine()
     {
+        if ($this->_stream === null) {
+            return false;
+        }
         $line = fgets($this->_stream);
         if ($line !== false) {
             ++$this->_line; // increment line number
@@ -98,10 +107,15 @@ class BiblioPHP_Ris_Parser
 
     protected $_field;
 
+    public function current()
+    {
+        return $this->_current;
+    }
+
     /**
      * @return array|false
      */
-    protected function _parseEntry()
+    public function next()
     {
         // move to the begining of record, this allows to skip UTF-8 BOM
         while (($line = $this->_getLine()) !== false) {
@@ -167,11 +181,11 @@ class BiblioPHP_Ris_Parser
             }
         }
 
-        if (count($entry) > 1) {
-            return $entry;
+        if (count($entry) <= 1) {
+            $entry = false;
         }
 
-        return false;
+        return $this->_current = $entry;
     }
 
     /**
