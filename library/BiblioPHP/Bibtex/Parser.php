@@ -12,6 +12,12 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
      */
     protected $_current;
 
+    /**
+     * String macros.
+     * @var string[]
+     */
+    protected $_strings;
+
     public function __construct()
     {
         $this->_tokenizer = new BiblioPHP_Bibtex_Tokenizer();
@@ -48,118 +54,12 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
         return $this->_current;
     }
 
-    public function next()
+    protected function _peekToken()
     {
-        $token = $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_TYPE);
-
-        if (empty($token)) {
-            return false;
-        }
-
-        $entryType = substr($token['value'], 1);
-
-        // handle entries with empty reftype
-
-        $token = $this->_getToken();
-
-        if (empty($token)) {
-            return false;
-        }
-
-        // expect 
-        if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_STRING) {
-            $citeKey = $token['value'];
-        } else {
-            $citeKey = null;
-        }
-
-        $entry = array(
-            'entryType' => strtolower($entryType),
-            'citeKey' => $citeKey,
-        );
-
-        // consume comma, if not already consumed
-        if ($token['type'] !== BiblioPHP_Bibtex_Tokenizer::T_COMMA) {
-            $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_COMMA);
-        }
-
-        while ($token = $this->_getToken()) {
-            if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_END) {
-                break;
-            }
-
-            $keyToken = $token;
-
-            if (!$this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_SEPARATOR)) {
-                break;
-            }
-
-            $valueToken = $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_STRING);
-            $value = $valueToken['value'];
-
-            $end = false;
-
-            while ($token = $this->_getToken()) {
-                if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_END) {
-                    // ok, after string value record ends, process that string
-                    // and finish processing of this entry
-                    $end = true;
-                    break;
-                }
-
-                if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_CONCAT) {
-                    $token = $this->_getToken(BiblioPHP_Bibtex_Tokenizer::T_STRING);
-                    $value .= $token['value'];
-                }
-
-                if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_COMMA) {
-                    break;
-                }
-            }
-
-            $key = strtolower($keyToken['value']);
-
-            switch ($key) {
-                case 'author':
-                case 'editor':
-                    $value = $value;
-                    break;
-
-                case 'pages':
-                    $value = self::normalizePages($value);
-                    break;
-
-                case 'year':
-                case 'day':
-                    $value = intval($value);
-                    break;
-
-                case 'month':
-                    $value = self::normalizeMonth($value);
-                    break;
-
-                default:
-                    // spaces may be part of quoted/braced strings
-                    $value = trim($value);
-                    break;
-            }
-
-            if ($key === 'keywords') {
-                // some providers (ScienceDirect) put keywords in separate key=value pairs
-                $entry['keywords'][] = $value;
-            } else {
-                $entry[$key] = $value;
-            }
-
-            if ($end) {
-                break;
-            }
-        }
-
-        return $this->_current = $entry;
+        return $this->_tokenizer->peekToken();
     }
 
-    protected function _getToken($type = null)
+    protected function _nextToken($type = null)
     {
         while (($token = $this->_tokenizer->nextToken()) !== false) {
             if ($type === null || $token['type'] === $type) {
@@ -167,6 +67,166 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
             }
         }
         return false;
+    }
+
+    protected function _expectToken($type)
+    {
+        if (($token = $this->_peekToken()) && ($token['type'] === $type)) {
+            return $token;
+        }
+        return false;
+    }
+
+    protected function _getStringValue($string, $expand = false)
+    {
+        if ($expand && isset($this->_strings[$string])) {
+            $string = $this->_strings[$string];
+        }
+        return $string;        
+    }
+
+    protected function _getString($expand = false)
+    {
+        $token = $this->_nextToken(BiblioPHP_Bibtex_Tokenizer::T_STRING);
+        if (!$token) {
+            return false;
+        }
+
+        // perform expansion if string is not delimited FIXME recognize DELIMITED AND NOT DELIMITED STRING
+        // only NOT DELIMITED STRINGS are subjects to string macro expansion
+        $string = $this->_getStringValue($token['value'], $expand);
+
+        do {
+            $continue = false;
+            if ($this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_CONCAT)) {
+                $this->_nextToken(); // consume T_CONCAT
+                if ($token = $this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_STRING)) {
+                    $this->_nextToken(); // consume T_STRING
+                    $string .= $this->_getStringValue($token['value'], $expand);
+                    $continue = true; // ok, next loop
+                }
+            }
+        } while ($continue);
+
+        return $string;
+    }
+
+    public function next()
+    {
+        $token = $this->_nextToken(BiblioPHP_Bibtex_Tokenizer::T_TYPE);
+
+        if (empty($token)) {
+            return false;
+        }
+
+        $entryType = substr($token['value'], 1);
+
+        // skip preamble
+        if (strtolower($entryType) === 'preamble') {
+            // @preamble { string [ # string ] }
+            $this->_getString(); // consume and discard preamble
+            return $this->next();
+        }
+
+        // register string macros
+        if (strtolower($entryType) === 'string') {
+            // list of key-value pairs, more than one!!!
+            
+            $key = $this->_getString();
+            $value = $this->_getString(true);
+
+            if (strlen($key) && strlen($value)) {
+                $this->_strings[$key] = $value;
+            }
+
+            return $this->next();
+        }
+
+        // check if next token after entry type contains a valid cite key
+        $next = $this->_peekToken();
+        if (!$next) {
+            return false;
+        }
+
+        $entry = array(
+            'entryType' => strtolower($entryType),
+        );
+
+        // to handle entries with empty reftype, peek at next token,
+        // take it of the stream if it is a string
+        if ($next['type'] === BiblioPHP_Bibtex_Tokenizer::T_STRING) {
+            $entry['citeKey'] = $next['value'];
+        }
+
+        while ($token = $this->_peekToken()) {
+            if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_END) {
+                $this->_nextToken();
+                break;
+            }
+
+            if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_COMMA) {
+                // skip commas
+                $this->_nextToken();
+                continue;
+            }
+
+            // parse key-value pairs
+            if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_STRING) {
+                $key = $this->_getString(); // consume string
+
+                if (!$this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_SEPARATOR)) {
+                    continue; // skip invalid token, will be handled in next loop
+                }
+
+                $this->_nextToken(); // consume separator
+
+                if (!$this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_STRING)) {
+                    continue;
+                }
+
+                $value = $this->_getString(true);
+                $key = strtolower($key);
+
+                switch ($key) {
+                    case 'author':
+                    case 'editor':
+                        $value = $value;
+                        break;
+
+                    case 'pages':
+                        $value = self::normalizePages($value);
+                        break;
+
+                    case 'year':
+                    case 'day':
+                        $value = intval($value);
+                        break;
+
+                    case 'month':
+                        $value = self::normalizeMonth($value);
+                        break;
+
+                    default:
+                        // spaces may be part of quoted/braced strings
+                        $value = trim($value);
+                        break;
+                }
+
+                if ($key === 'keywords') {
+                    // some providers (ScienceDirect) put keywords in separate key=value pairs
+                    $entry['keywords'][] = $value;
+                } else {
+                    $entry[$key] = $value;
+                }
+
+                continue;
+            }
+
+            // consume unhandled token
+            $this->_nextToken();
+        }
+
+        return $this->_current = $entry;
     }
 
     /**

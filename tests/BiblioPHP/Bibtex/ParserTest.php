@@ -102,4 +102,25 @@ class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
             'Adhesive force',
         ));
     }
+
+    public function testParseWithStringEntry()
+    {
+        $input = '
+            @STRING{TU_Eindhoven = {Technische Universiteit Eindhoven}}
+
+            @PHDTHESIS{Aarts_1993_PhD,
+              author = {Ronald Aarts},
+              title = {A numerical study of quantized vortices in He II},
+              school = TU_Eindhoven,
+              year = {1993}
+            }
+        ';
+
+        $parser = new BiblioPHP_Bibtex_Parser();
+        $entry = $parser->setInputString($input)->next();
+
+        $this->assertEquals($entry['entryType'], 'phdthesis');
+        $this->assertEquals($entry['author'], 'Ronald Aarts');
+        $this->assertEquals($entry['school'], 'Technische Universiteit Eindhoven');
+    }
 }
