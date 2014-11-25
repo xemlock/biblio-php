@@ -8,6 +8,7 @@ class BiblioPHP_Bibtex_Tokenizer
     const S_DEFAULT         = 'DEFAULT';
     const S_COMMENT         = 'COMMENT';
     const S_TYPE            = 'TYPE';
+    const S_EXPECT_ENTRY    = 'EXPECT_ENTRY';
     const S_EXPECT_STRING   = 'EXPECT_STRING';
     const S_STRING          = 'STRING';
     const S_QUOTED_STRING   = 'QUOTED_STRING';
@@ -15,9 +16,12 @@ class BiblioPHP_Bibtex_Tokenizer
 
     const T_TYPE            = 'T_TYPE';
     const T_STRING          = 'T_STRING';
+    const T_QUOTED_STRING   = 'T_QUOTED_STRING';
+    const T_BRACED_STRING   = 'T_BRACED_STRING';
     const T_CONCAT          = 'T_CONCAT';
     const T_COMMA           = 'T_COMMA';
     const T_SEPARATOR       = 'T_SEPARATOR';
+    const T_BEGIN           = 'T_BEGIN';
     const T_END             = 'T_END';
 
     /**
@@ -125,8 +129,19 @@ class BiblioPHP_Bibtex_Tokenizer
         }
 
         if ($this->_streamBufOffset === strlen($this->_streamBuf)) {
-            $this->_streamBuf = fgets($this->_stream);
             $this->_streamBufOffset = 0;
+            $this->_streamBuf = fgets($this->_stream);
+
+            if ($this->_streamBuf !== false) {
+                // Normalize line endings
+                $this->_streamBuf = str_replace(array("\r\n", "\r"), "\n", $this->_streamBuf);
+
+                // If the entry type is @comment, it is not considered to be the start
+                // of an entry. Actual rule is that everything from the @comment and to
+                // the end of line is ignored. Read more:
+                // http://maverick.inria.fr/~Xavier.Decoret/resources/xdkbibtex/bibtex_summary.html#comment
+                $this->_streamBuf = preg_replace('/@comment[^\n]*/i', '', $this->_streamBuf);
+            }
         }
 
         if ($this->_streamBuf === false) {
@@ -180,6 +195,8 @@ class BiblioPHP_Bibtex_Tokenizer
         return $this->_token;
     }
 
+    protected $_beginCurly;
+
     protected function _nextToken()
     {
         $token = array(
@@ -187,6 +204,9 @@ class BiblioPHP_Bibtex_Tokenizer
             'value' => null,
             'line'  => null,
         );
+
+        $nestLevel = 0; // {}
+        $bNestLevel = 0; // ()
 
         while (($char = $this->_getChar()) !== false) {
             switch ($char) {
@@ -201,6 +221,7 @@ class BiblioPHP_Bibtex_Tokenizer
 
                         case self::S_QUOTED_STRING:
                         case self::S_BRACED_STRING:
+                        case self::S_STRING:
                             $token['value'] .= '@';
                             break;
 
@@ -209,50 +230,123 @@ class BiblioPHP_Bibtex_Tokenizer
                     }
                     break;
 
-                case '{':
+                case '(':
                     switch ($this->_state) {
                         case self::S_TYPE:
-                            switch (strtolower($token['value'])) {
-                                case '@comment':
-                                    // If the entry type is @comment, it is not considered to be the start
-                                    // of an entry. Actual rule is that everything from the @comment and to
-                                    // the end of line is ignored. Read more:
-                                    // http://maverick.inria.fr/~Xavier.Decoret/resources/xdkbibtex/bibtex_summary.html#comment
-                                    $this->_setState(self::S_COMMENT);
-                                    break;
+                            $this->_setState(self::S_EXPECT_ENTRY);
+                            $this->_ungetChar('(');
+                            return $token;
 
-                                default:
-                                    $this->_setState(self::S_EXPECT_STRING);
-                                    return $token;
+                        case self::S_EXPECT_ENTRY:
+                            $this->_setState(self::S_EXPECT_STRING);
+                            $token['type']  = self::T_BEGIN;
+                            $token['value'] = $char;
+                            $token['line']  = $this->_line;
+                            $this->_beginCurly = false;
+                            return $token;
+
+                        case self::S_EXPECT_STRING:
+                            $this->_setState(self::S_STRING);
+                            $bNestLevel = 1;
+                            $token['type']  = self::T_STRING;
+                            $token['value'] = $char;
+                            $token['line']  = $this->_line;
+                            break;
+
+                        case self::S_STRING:
+                            ++$bNestLevel;
+                            // falls through
+
+                        case self::S_QUOTED_STRING:
+                        case self::S_BRACED_STRING:
+                            $token['value'] .= $char;
+                            break;
+                    }
+                    break;
+
+                case ')':
+                    switch ($this->_state) {
+                        case self::S_TYPE:
+                            $this->_setState(self::S_DEFAULT);
+                            break;
+
+                        case self::S_STRING:
+                            if ($bNestLevel > 0) {
+                                $token['value'] .= $char;
+                                --$bNestLevel;
+                            } else {
+                                // not a part of string, but closing delimiter
+                                $this->_ungetChar(')');
+                                $this->_setState(self::S_EXPECT_STRING);
+                                return $token;
                             }
                             break;
 
+                        case self::S_QUOTED_STRING:
+                        case self::S_BRACED_STRING:
+                            $token['value'] .= $char;
+                            break;
+
+                        case self::S_EXPECT_STRING: // both ')' and '}' may be used to close entry
+                            $this->_setState(self::S_DEFAULT);
+                            $token['type']  = self::T_END;
+                            $token['value'] = $char;
+                            $token['line']  = $this->_line;
+                            return $token;
+                    }
+                    break;
+
+                case '{':
+                    switch ($this->_state) {
+                        case self::S_TYPE:
+                            $this->_setState(self::S_EXPECT_ENTRY);
+                            $this->_ungetChar('{');
+                            return $token;
+
+                        case self::S_EXPECT_ENTRY:
+                            $this->_setState(self::S_EXPECT_STRING);
+                            $token['type']  = self::T_BEGIN;
+                            $token['value'] = $char;
+                            $token['line']  = $this->_line;
+                            $this->_beginCurly = true;
+                            return $token;
+
                         case self::S_EXPECT_STRING:
                             $this->_setState(self::S_BRACED_STRING);
-                            $token['type']  = self::T_STRING;
+                            $token['type']  = self::T_BRACED_STRING;
                             $token['value'] = '';
                             $token['line']  = $this->_line;
                             $nestLevel = 0;
                             break;
 
                         case self::S_BRACED_STRING:
-                            $token['value'] .= '{';
+                            $token['value'] .= $char;
                             ++$nestLevel;
+                            break;
+
+                        case self::S_STRING:
+                        case self::S_QUOTED_STRING:
+                            $token['value'] .= $char;
                             break;
                     }
                     break;
 
                 case '}':
                     switch ($this->_state) {
-                        case self::S_EXPECT_STRING:
+                        case self::S_TYPE:
                             $this->_setState(self::S_DEFAULT);
-                            $token['type'] = self::T_END;
-                            $token['line'] = $this->_line;
+                            break;
+
+                        case self::S_EXPECT_STRING: // both ')' and '}' may be used to close entry
+                            $this->_setState(self::S_DEFAULT);
+                            $token['type']  = self::T_END;
+                            $token['value'] = $char;
+                            $token['line']  = $this->_line;
                             return $token;
 
                         case self::S_BRACED_STRING:
-                            if ($nestLevel) {
-                                $token['value'] .= '}';
+                            if ($nestLevel > 0) {
+                                $token['value'] .= $char;
                                 --$nestLevel;
                             } else {
                                 $this->_setState(self::S_EXPECT_STRING);
@@ -260,8 +354,9 @@ class BiblioPHP_Bibtex_Tokenizer
                             }
                             break;
 
+                        case self::S_STRING:
                         case self::S_QUOTED_STRING:
-                            $token['value'] .= '}';
+                            $token['value'] .= $char;
                             break;
 
                         default:
@@ -271,6 +366,10 @@ class BiblioPHP_Bibtex_Tokenizer
 
                 case ',':
                     switch ($this->_state) {
+                        case self::S_TYPE:
+                            $this->_setState(self::S_DEFAULT);
+                            break;
+
                         case self::S_STRING:
                             $this->_setState(self::S_EXPECT_STRING);
                             $this->_ungetChar(',');
@@ -291,6 +390,10 @@ class BiblioPHP_Bibtex_Tokenizer
 
                 case '#':
                     switch ($this->_state) {
+                        case self::S_TYPE:
+                            $this->_setState(self::S_DEFAULT);
+                            break;
+
                         case self::S_EXPECT_STRING:
                             $token['type']  = self::T_CONCAT;
                             $token['value'] = '#';
@@ -309,15 +412,9 @@ class BiblioPHP_Bibtex_Tokenizer
 
                 case "\n":
                     ++$this->_line;
-                    switch ($this->_state) {
-                        case self::S_COMMENT:
-                            $this->_state = self::S_DEFAULT;
-                            break;
-                    }
                     // falls through
 
                 case " ":
-                case "\r":
                 case "\t":
                     switch ($this->_state) {
                         case self::S_STRING:
@@ -337,6 +434,10 @@ class BiblioPHP_Bibtex_Tokenizer
 
                 case '=':
                     switch ($this->_state) {
+                        case self::S_TYPE:
+                            $this->_setState(self::S_DEFAULT);
+                            break;
+
                         case self::S_EXPECT_STRING:
                             $token['type']  = self::T_SEPARATOR;
                             $token['value'] = '=';
@@ -361,9 +462,13 @@ class BiblioPHP_Bibtex_Tokenizer
 
                 case '"':
                     switch ($this->_state) {
+                        case self::S_TYPE:
+                            $this->_setState(self::S_DEFAULT);
+                            break;
+
                         case self::S_EXPECT_STRING:
                             $this->_setState(self::S_QUOTED_STRING);
-                            $token['type']  = self::T_STRING;
+                            $token['type']  = self::T_QUOTED_STRING;
                             $token['value'] = '';
                             $token['line']  = $this->_line;
                             break;
@@ -379,21 +484,22 @@ class BiblioPHP_Bibtex_Tokenizer
                         case self::S_TYPE:
                             if (ctype_alpha($char)) {
                                 $token['value'] .= $char;
+                            } else {
+                                $this->_setState(self::S_DEFAULT);
                             }
                             break;
 
                         case self::S_EXPECT_STRING:
                         case self::S_STRING:
-                            if (ctype_alnum($char) || (strpos('-:._', $char) !== false)) {
-                                if ($this->_state === self::S_EXPECT_STRING) {
-                                    $token['type']  = self::T_STRING;
-                                    $token['value'] = $char;
-                                    $token['line']  = $this->_line;
-                                } else {
-                                    $token['value'] .= $char;
-                                }
-                                $this->_setState(self::S_STRING);
+                            // be as liberal as possible when tokenizing undelimited string
+                            if ($this->_state === self::S_EXPECT_STRING) {
+                                $token['type']  = self::T_STRING;
+                                $token['value'] = $char;
+                                $token['line']  = $this->_line;
+                            } else {
+                                $token['value'] .= $char;
                             }
+                            $this->_setState(self::S_STRING);
                             break;
 
                         case self::S_QUOTED_STRING:
@@ -403,6 +509,10 @@ class BiblioPHP_Bibtex_Tokenizer
                     }
                     break;
             }
+        }
+
+        if ($token['type'] !== null) { // something left in buffer
+            return $token;
         }
 
         return false;

@@ -62,7 +62,7 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
     protected function _nextToken($type = null)
     {
         while (($token = $this->_tokenizer->nextToken()) !== false) {
-            if ($type === null || $token['type'] === $type) {
+            if ($type === null || in_array($token['type'], (array) $type)) {
                 return $token;
             }
         }
@@ -71,8 +71,12 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
 
     protected function _expectToken($type)
     {
-        if (($token = $this->_peekToken()) && ($token['type'] === $type)) {
-            return $token;
+        if (($token = $this->_peekToken())) {
+            if ((is_array($type) && in_array($token['type'], $type, true))
+                || ($token['type'] === $type)
+            ) {
+                return $token;
+            }
         }
         return false;
     }
@@ -87,7 +91,11 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
 
     protected function _getString($expand = false)
     {
-        $token = $this->_nextToken(BiblioPHP_Bibtex_Tokenizer::T_STRING);
+        $token = $this->_nextToken(array(
+            BiblioPHP_Bibtex_Tokenizer::T_STRING,
+            BiblioPHP_Bibtex_Tokenizer::T_QUOTED_STRING,
+            BiblioPHP_Bibtex_Tokenizer::T_BRACED_STRING,
+        ));
         if (!$token) {
             return false;
         }
@@ -100,7 +108,12 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
             $continue = false;
             if ($this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_CONCAT)) {
                 $this->_nextToken(); // consume T_CONCAT
-                if ($token = $this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_STRING)) {
+                if ($token = $this->_expectToken(array(
+                        BiblioPHP_Bibtex_Tokenizer::T_STRING,
+                        BiblioPHP_Bibtex_Tokenizer::T_QUOTED_STRING,
+                        BiblioPHP_Bibtex_Tokenizer::T_BRACED_STRING,
+                    ))
+                ) {
                     $this->_nextToken(); // consume T_STRING
                     $string .= $this->_getStringValue($token['value'], $expand);
                     $continue = true; // ok, next loop
@@ -124,7 +137,7 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
         // skip preamble
         if (strtolower($entryType) === 'preamble') {
             // @preamble { string [ # string ] }
-            $this->_getString(); // consume and discard preamble
+            $this->_nextToken(BiblioPHP_Bibtex_Tokenizer::T_END); // consume and discard preamble
             return $this->next();
         }
 
@@ -142,11 +155,8 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
             return $this->next();
         }
 
-        // check if next token after entry type contains a valid cite key
-        $next = $this->_peekToken();
-        if (!$next) {
-            return false;
-        }
+        // skip entry begin
+        $this->_nextToken(BiblioPHP_Bibtex_Tokenizer::T_BEGIN);
 
         $entry = array(
             'entryType' => strtolower($entryType),
@@ -154,8 +164,9 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
 
         // to handle entries with empty reftype, peek at next token,
         // take it of the stream if it is a string
-        if ($next['type'] === BiblioPHP_Bibtex_Tokenizer::T_STRING) {
+        if ($next = $this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_STRING)) {
             $entry['citeKey'] = $next['value'];
+            $this->_nextToken(); // consume cite key
         }
 
         while ($token = $this->_peekToken()) {
@@ -171,7 +182,12 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
             }
 
             // parse key-value pairs
-            if ($token['type'] === BiblioPHP_Bibtex_Tokenizer::T_STRING) {
+            if (in_array($token['type'], array(
+                    BiblioPHP_Bibtex_Tokenizer::T_STRING,
+                    BiblioPHP_Bibtex_Tokenizer::T_QUOTED_STRING,
+                    BiblioPHP_Bibtex_Tokenizer::T_BRACED_STRING,
+                ))
+            ) {
                 $key = $this->_getString(); // consume string
 
                 if (!$this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_SEPARATOR)) {
@@ -180,7 +196,12 @@ class BiblioPHP_Bibtex_Parser implements BiblioPHP_ParserInterface
 
                 $this->_nextToken(); // consume separator
 
-                if (!$this->_expectToken(BiblioPHP_Bibtex_Tokenizer::T_STRING)) {
+                if (!$this->_expectToken(array(
+                        BiblioPHP_Bibtex_Tokenizer::T_STRING,
+                        BiblioPHP_Bibtex_Tokenizer::T_QUOTED_STRING,
+                        BiblioPHP_Bibtex_Tokenizer::T_BRACED_STRING,
+                    ))
+                ) {
                     continue;
                 }
 
