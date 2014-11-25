@@ -51,14 +51,24 @@ class BiblioPHP_Bibtex_Mapper
             // check if there is a non [dx.]doi.org URL given in doi field,
             // IEEE stores its own DOI urls in doi field
             if (preg_match('/^http(s)?:\/\//i', $data['doi']) &&
-                !preg_match('/(dx\.)doi\.org\//i', $data['doi'])
+                !preg_match('/(dx\.)?doi\.org\//i', $data['doi'])
             ) {
                 $publication->setUrl($data['doi']);
             }
         }
 
         if (isset($data['url'])) {
-            $publication->setUrl($data['url']);
+            $doi = $publication->getDoi();
+            if (!$doi && preg_match('/.+\/(?P<doi>10\..+)/', $data['url'], $match)) {
+                $doi = $match['doi'];
+                $publication->setDoi($doi);
+            }
+
+            // set URL either when no DOI was extracted, or DOI was extracted
+            // but the URL does not match dx.doi.org domain
+            if (!$doi || !preg_match('/http(s)?:\/\/(dx\.)?doi\.org\//i', $data['url'])) {
+                $publication->setUrl($data['url']);
+            }
         }
 
         if (isset($data['title'])) {
