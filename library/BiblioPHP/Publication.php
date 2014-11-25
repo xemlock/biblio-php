@@ -73,6 +73,12 @@ class BiblioPHP_Publication
         }
     }
 
+    public function setTitle($title)
+    {
+        // normalize spaces
+        $this->_title = trim(preg_replace('/\s+/', ' ', $title));
+    }
+
     public function setDoi($doi)
     {
         $doi = trim($doi);
