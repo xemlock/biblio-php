@@ -115,8 +115,11 @@ class BiblioPHP_Publication
         return $this;
     }
 
-    public function setKeywords(array $keywords)
+    public function setKeywords($keywords)
     {
+        if (!is_array($keywords)) {
+            $keywords = explode(',', $keywords);
+        }
         $this->_keywords = array();
         array_map(array($this, 'addKeyword'), $keywords);
         return $this;
@@ -145,8 +148,15 @@ class BiblioPHP_Publication
         return (array) $this->_authors;
     }
 
-    public function setAuthors(array $authors)
+    /**
+     * @param  string|array $authors
+     * @return BiblioPHP_Publication
+     */
+    public function setAuthors($authors)
     {
+        if (!is_array($authors)) {
+            $authors = explode(';', $authors);
+        }
         $this->_authors = null;
         array_map(array($this, 'addAuthor'), $authors);
         return $this;
@@ -166,8 +176,11 @@ class BiblioPHP_Publication
         return (array) $this->_editors;
     }
 
-    public function setEditors(array $authors)
+    public function setEditors($authors)
     {
+        if (!is_array($authors)) {
+            $authors = explode(';', $authors);
+        }
         $this->_authors = null;
         array_map(array($this, 'addEditor'), $authors);
         return $this;
