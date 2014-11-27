@@ -147,7 +147,9 @@ class BiblioPHP_Ris_Parser implements BiblioPHP_ParserInterface
                 break;
             }
 
-            if (!preg_match('/^(?P<key>[A-Z][A-Z0-9])  - /i', $line, $match)) {
+            // some providers (Phys. Rev.) instead of non including some tags
+            // include empty ones
+            if (!preg_match('/^(?P<key>[A-Z][A-Z0-9])  -/i', $line, $match)) {
                 // if non-empty line and of invalid syntax, assume (broken)
                 // multi-line syntax used by EndNote;
                 // Duplicate last encountered field

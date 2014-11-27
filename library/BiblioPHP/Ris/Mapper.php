@@ -88,7 +88,7 @@ class BiblioPHP_Ris_Mapper
 
         // set pages, page ranges if present are expected to be stored in SP
         if (isset($data['SP'])) {
-            $sp = $data['SP'];
+            $sp = (string) $data['SP'];
 
             if (strpos($sp, '-') !== false || strpos($sp, ',') !== false) {
                 $publication->setPages($sp);
