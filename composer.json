@@ -1,5 +1,5 @@
 {
-    "name": "BiblioPHP",
+    "name": "xemlock/biblio-php",
     "type": "library",
     "autoload": {
         "psr-0": {
