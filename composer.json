@@ -1,6 +1,7 @@
 {
     "name": "xemlock/biblio-php",
     "type": "library",
+    "minimum-stability": "dev",
     "autoload": {
         "psr-0": {
             "BiblioPHP_": "library/"
