@@ -25,12 +25,18 @@ class BiblioPHP_Publication
     protected $_series;
 
     /**
-     * @var array
+     * @var PublicationAuthor[]
      */
     protected $_authors;
 
+    /**
+     * @var PublicationAuthor[]
+     */
     protected $_editors;
 
+    /**
+     * @var PublicationAuthor[]
+     */
     protected $_translators;
 
     protected $_doi;
@@ -136,8 +142,8 @@ class BiblioPHP_Publication
      */
     public function addAuthor($author)
     {
-        $author = self::normalizeAuthor($author);
-        if ($author !== false) {
+        $author = BiblioPHP_PublicationAuthor::factory($author);
+        if ($author) {
             $this->_authors[] = $author;
         }
         return $this;
@@ -164,7 +170,7 @@ class BiblioPHP_Publication
 
     public function addEditor($author)
     {
-        $author = self::normalizeAuthor($author);
+        $author = BiblioPHP_PublicationAuthor::factory($author);
         if ($author !== false) {
             $this->_editors[] = $author;
         }
@@ -188,7 +194,7 @@ class BiblioPHP_Publication
 
     public function addTranslator($author)
     {
-        $author = self::normalizeAuthor($author);
+        $author = BiblioPHP_PublicationAuthor::factory($author);
         if ($author !== false) {
             $this->_translators[] = $author;
         }
@@ -301,31 +307,6 @@ class BiblioPHP_Publication
             }
         }
         return false;
-    }
-
-    /**
-     * @param  string $string
-     * @return string|false
-     */
-    public static function normalizeAuthor($string)
-    {
-        // the author name must be in the following syntax:
-        // Lastname, Firstname, Suffix
-        // Lastname is the only required part.
-
-        // make sure name does not contain colon
-
-        $string = trim($string, ", \r\n\t");
-        $string = str_replace(';', '', $string);
-
-        $parts = preg_split('/\s*,\s*/', $string);
-        $parts = array_slice($parts, 0, 3);
-
-        if ($parts[0] === '') {
-            return false;
-        }
-
-        return implode(', ', $parts);
     }
 
     /**
