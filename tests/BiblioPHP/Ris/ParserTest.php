@@ -1,6 +1,5 @@
 <?php
 
-require_once 'BiblioPHP/Ris/Parser.php';
 
 class BiblioPHP_Ris_ParserTest extends PHPUnit_Framework_TestCase
 {
@@ -27,7 +26,7 @@ SP  - 1128
 EP  - 1131
 SN  - 1078-8956
 UR  - http://dx.doi.org/10.1038/nm.2447
-ER  - 
+ER  -
 
 EOS;
         $parser = new BiblioPHP_Ris_Parser();
@@ -77,11 +76,11 @@ EOS;
         $parser = new BiblioPHP_Ris_Parser();
         $entry = $parser->setInputFile(test_asset('ams.endnote.ris'))->next();
 
-        $this->assertEquals($entry['TY'], 'JOUR');
-        $this->assertEquals($entry['KW'], array(
+        $this->assertEquals('JOUR', $entry['TY']);
+        $this->assertEquals(array(
             'Keyword1',
             'Keyword2',
             'Keyword3 with more than one word',
-        ));
+        ), $entry['KW']);
     }
 }

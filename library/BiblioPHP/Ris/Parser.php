@@ -22,6 +22,10 @@ class BiblioPHP_Ris_Parser implements BiblioPHP_ParserInterface
 
     protected $_position;
 
+    const ARRAY_KEYS = array(
+        'AU', 'A1', 'A2', 'A3', 'A4', 'ED', 'KW',
+    );
+
     public function __destruct()
     {
         if ($this->_stream) {
@@ -152,7 +156,7 @@ class BiblioPHP_Ris_Parser implements BiblioPHP_ParserInterface
             if (!preg_match('/^(?P<key>[A-Z][A-Z0-9])  -/i', $line, $match)) {
                 // if non-empty line and of invalid syntax, assume (broken)
                 // multi-line syntax used by EndNote;
-                // Duplicate last encountered field
+                // Append this line to previous key
                 if (strlen($line) && $this->_field) {
                     $match['key'] = $this->_field;
                     $line = $this->_field . '  - ' . $line;
@@ -173,13 +177,9 @@ class BiblioPHP_Ris_Parser implements BiblioPHP_ParserInterface
             $this->_field = $key;
             $value = trim(substr($line, 6));
 
-            if (isset($entry[$key])) {
-                if (!is_array($entry[$key])) {
-                    $entry[$key] = array($entry[$key]);
-                }
+            // ignore empty values in output
+            if (strlen($value)) {
                 $entry[$key][] = $value;
-            } else {
-                $entry[$key] = $value;
             }
         }
 
@@ -187,7 +187,7 @@ class BiblioPHP_Ris_Parser implements BiblioPHP_ParserInterface
             $entry = false;
         }
 
-        return $this->_current = $entry;
+        return $this->_current = self::normalizeValues($entry);
     }
 
     /**
@@ -200,5 +200,24 @@ class BiblioPHP_Ris_Parser implements BiblioPHP_ParserInterface
             $args[0] = '[' . $this->_line . '] ' . $message;
             call_user_func_array('printf', $args);
         }
+    }
+
+    /**
+     * Normalize values - ensure that values for given types are either
+     * array or scalar
+     *
+     * @param array $values
+     * @return array
+     */
+    public function normalizeValues(array $values)
+    {
+        foreach ($values as $key => $value) {
+            if (in_array($key, self::ARRAY_KEYS, true)) {
+                $values[$key] = (array) $value;
+            } else {
+                $values[$key] = implode(' ', (array) $value);
+            }
+        }
+        return $values;
     }
 }

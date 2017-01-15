@@ -1,8 +1,5 @@
 <?php
 
-require_once 'BiblioPHP/Bibtex/Tokenizer.php';
-require_once 'BiblioPHP/Bibtex/Parser.php';
-
 class BiblioPHP_Bibtex_ParserTest extends PHPUnit_Framework_TestCase
 {
     public function testParseString()

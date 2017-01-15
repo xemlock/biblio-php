@@ -1,12 +1,5 @@
 <?php
 
-require_once 'BiblioPHP/Ris/Writer.php';
-require_once 'BiblioPHP/Ris/PubTypeMap.php';
-
-require_once 'BiblioPHP/Publication.php';
-require_once 'BiblioPHP/PublicationAuthor.php';
-require_once 'BiblioPHP/PublicationType.php';
-
 class BiblioPHP_Ris_WriterTest extends PHPUnit_Framework_TestCase
 {
     public function testPages()

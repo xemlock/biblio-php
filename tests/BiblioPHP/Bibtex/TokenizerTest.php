@@ -1,7 +1,5 @@
 <?php
 
-require_once 'BiblioPHP/Bibtex/Tokenizer.php';
-
 class BiblioPHP_Bibtex_TokenizerTest extends PHPUnit_Framework_TestCase
 {
     public function testTokenizeString() // {{{

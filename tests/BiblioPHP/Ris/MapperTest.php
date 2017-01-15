@@ -1,13 +1,5 @@
 <?php
 
-require_once 'BiblioPHP/Ris/Parser.php';
-require_once 'BiblioPHP/Ris/Mapper.php';
-require_once 'BiblioPHP/Ris/PubTypeMap.php';
-
-require_once 'BiblioPHP/Publication.php';
-require_once 'BiblioPHP/PublicationAuthor.php';
-require_once 'BiblioPHP/PublicationType.php';
-
 class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
 {
     public function testMapper()
@@ -28,6 +20,47 @@ class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($publication->getDoi(), '10.1175/JAS-D-12-0295.1');
         $this->assertEquals($publication->getYear(), 2013);
     }
+
+    public function testDoi()
+    {
+        $mapper = new BiblioPHP_Ris_Mapper();
+
+        $publication = $mapper->fromArray(array(
+            'TY' => 'JOUR',
+            'DO' => '10.1103/PhysRevLett.112.124301',
+        ));
+        $this->assertEquals('10.1103/PhysRevLett.112.124301', $publication->getDoi());
+
+        $publication = $mapper->fromArray(array(
+            'TY' => 'JOUR',
+            'DO' => 'http://dx.doi.org/10.1103/PhysRevLett.112.124301',
+        ));
+        $this->assertEquals('10.1103/PhysRevLett.112.124301', $publication->getDoi());
+    }
+
+    public function testNoAuthors()
+    {
+        $mapper = new BiblioPHP_Ris_Mapper();
+
+        $publication = $mapper->fromArray(array(
+            'TY' => 'JOUR',
+        ));
+        $this->assertEquals(array(), $publication->getAuthors());
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Author last name cannot be empty
+     */
+    public function testEmptyAuthors()
+    {
+        $mapper = new BiblioPHP_Ris_Mapper();
+        $mapper->fromArray(array(
+            'TY' => 'JOUR',
+            'A1' => '',
+        ));
+    }
+
 
     public function testPages()
     {
