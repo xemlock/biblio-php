@@ -2,6 +2,9 @@
     "name": "xemlock/biblio-php",
     "type": "library",
     "minimum-stability": "dev",
+    "require-dev": {
+        "phpunit/phpunit": "4.7.*"
+    },
     "autoload": {
         "psr-0": {
             "BiblioPHP_": "library/"
