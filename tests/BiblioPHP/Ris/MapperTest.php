@@ -70,10 +70,10 @@ class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
             'SP' => '5-5, 12-14,13-15, 11-11,  17 - 19, 20, 21',
         ));
 
-        $this->assertEquals($publication->getPages(), array(
-            5,
-            '11-15',
-            '17-21',
+        $this->assertEquals($publication->getPages()->getPageRanges(), array(
+            5  => 5,
+            11 => 15,
+            17 => 21,
         ));
 
         $publication = $mapper->fromArray(array(
@@ -81,8 +81,8 @@ class BiblioPHP_Ris_MapperTest extends PHPUnit_Framework_TestCase
             'SP' => '11, 12 - 21',
         ));
 
-        $this->assertEquals($publication->getPages(), array(
-            '11-21',
+        $this->assertEquals($publication->getPages()->getPageRanges(), array(
+            11 => 21,
         ));
     }
 }

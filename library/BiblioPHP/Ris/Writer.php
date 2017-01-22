@@ -53,21 +53,21 @@ class BiblioPHP_Ris_Writer
         }
 
         $pages = $publication->getPages();
-        switch (count($pages)) {
+        switch (count($pages->getPageRanges())) {
             case 0:
                 break;
 
             case 1:
-                $string[] = $this->formatField('SP', $publication->getFirstPage());
-                $string[] = $this->formatField('EP', $publication->getLastPage());
+                $string[] = $this->formatField('SP', $pages->getFirstPage());
+                $string[] = $this->formatField('EP', $pages->getLastPage());
                 break;
 
             default:
                 // If there is more than one range of pages, store them in SP,
                 // and store the last page in EP. This approach supposedly works
                 // with both EndNote X3 and some others
-                $string[] = $this->formatField('SP', implode(', ', $pages));
-                $string[] = $this->formatField('EP', $publication->getLastPage());
+                $string[] = $this->formatField('SP', $pages->toString());
+                $string[] = $this->formatField('EP', $pages->getLastPage());
                 break;
         }
 
