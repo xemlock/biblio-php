@@ -201,7 +201,7 @@ class BiblioPHP_Ris_Mapper
         // Science uses A1
         foreach (array('AU', 'A1') as $field) {
             if (isset($data[$field])) {
-                foreach ((array) $data[$field] as $author) {
+                foreach ($this->normalizeNameList($data[$field]) as $author) {
                     $publication->addAuthor($author);
                 }
             }
@@ -210,7 +210,7 @@ class BiblioPHP_Ris_Mapper
         // editors, ED - Mendeley
         foreach (array('A2', 'A3', 'ED') as $field) {
             if (isset($data[$field])) {
-                foreach ((array) $data[$field] as $author) {
+                foreach ($this->normalizeNameList($data[$field]) as $author) {
                     $publication->addEditor($author);
                 }
             }
@@ -218,7 +218,7 @@ class BiblioPHP_Ris_Mapper
 
         // translators
         if (isset($data['A4'])) {
-            foreach ((array) $data[$field] as $author) {
+            foreach ($this->normalizeNameList($data[$field]) as $author) {
                 $publication->addTranslator($author);
             }
         }
@@ -243,5 +243,24 @@ class BiblioPHP_Ris_Mapper
         $publication->setNotes($notes);
 
         return $publication;
+    }
+
+    /**
+     * @param array|string $nameList
+     * @return array
+     */
+    protected function normalizeNameList($nameList)
+    {
+        $normalizedNameList = array();
+        foreach ((array) $nameList as $names) {
+            // iopscience.iop.org exports names in a single A1 field separated by 'and'
+            foreach (preg_split('/\s+(and)\s+/', $names) as $name) {
+                $name = trim($name);
+                if (strlen($name)) {
+                    $normalizedNameList[] = $name;
+                }
+            }
+        }
+        return $normalizedNameList;
     }
 }
